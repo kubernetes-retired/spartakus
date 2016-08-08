@@ -2,21 +2,19 @@
 
 This project encompasses two things:
 
-1. collector: an HTTP API capable of receiving statistics payloads from Tectonic clusters and storing them in Postgres
-2. volunteer: a tool that periodically generates statistics payloads using the v1 Kubernetes API and publishes it to the collector
+1. collector: an HTTP API capable of receiving reports from clusters and storing them in Postgres
+2. volunteer: a tool that periodically generates reports using the v1 Kubernetes API and publishes it to the collector
 
-An example of a statistics payload follows:
+An example of a report payload follows:
 
 ```
 {
-  "accountID": "238dcbc5-4562-4fe3-9d8b-dc67911a7376",
-  "accountSecret": "dhaowd2n3ngsj3d-9",
   "metadata": {
-    "generated_at": "1437174715",
+    "timestamp": "1437174715",
   },
   "payload": {
     "clusterID":"612e0f99-1912-4647-831d-ba4c3d918b66",
-    "kubernetesNodes":[
+    "nodes":[
       {
         "status":{
           "capacity":{
@@ -37,7 +35,7 @@ An example of a statistics payload follows:
 }
 ```
 
-Note the `generated_at` metadata field - this is populated by the volunteer (but is not required).
+Note the `timestamp` metadata field - this is populated by the volunteer (but is not required).
 The collector will add more fields to the record metadata when it is received:
 
 - `received_at`: unix timestamp at which the record was received (i.e. "1437174812")

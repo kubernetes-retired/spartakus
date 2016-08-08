@@ -3,10 +3,8 @@ package report
 import "encoding/json"
 
 type Record struct {
-	AccountID     string
-	AccountSecret string
-	Metadata      map[string]string
-	Payload       interface{}
+	Metadata map[string]string
+	Payload  interface{}
 }
 
 func (r *Record) UnmarshalJSON(d []byte) error {
@@ -15,8 +13,6 @@ func (r *Record) UnmarshalJSON(d []byte) error {
 		return err
 	}
 
-	r.AccountID = jr.AccountID
-	r.AccountSecret = jr.AccountSecret
 	r.Metadata = jr.Metadata
 	r.Payload = jr.Payload
 
@@ -31,18 +27,14 @@ func (r *Record) MarshalJSON() ([]byte, error) {
 	msg := json.RawMessage(b)
 
 	jr := jsonRecord{
-		AccountID:     r.AccountID,
-		AccountSecret: r.AccountSecret,
-		Metadata:      r.Metadata,
-		Payload:       &msg,
+		Metadata: r.Metadata,
+		Payload:  &msg,
 	}
 
 	return json.Marshal(&jr)
 }
 
 type jsonRecord struct {
-	AccountID     string            `json:"accountID"`
-	AccountSecret string            `json:"accountSecret"`
-	Metadata      map[string]string `json:"metadata"`
-	Payload       *json.RawMessage  `json:"payload"`
+	Metadata map[string]string `json:"metadata"`
+	Payload  *json.RawMessage  `json:"payload"`
 }

@@ -20,8 +20,8 @@ var (
 	HealthEndpoint  = "/health"
 	VersionEndpoint = "/version"
 
-	StatsMetadataFieldReceivedAt   = "received_at"
-	StatsMetadataFieldReceivedFrom = "received_from"
+	StatsMetadataFieldReceivedAt   = "receivedAt"
+	StatsMetadataFieldReceivedFrom = "receivedFrom"
 )
 
 type APIServer struct {
@@ -111,11 +111,7 @@ func logRecord(r *report.Record) {
 	if err != nil {
 		payload = "N/A"
 	}
-	accountID := r.AccountID
-	if accountID == "" {
-		accountID = "N/A"
-	}
-	log.Debugf("received record: accountID=%s metadata=%s payload=%s", accountID, metadata, payload)
+	log.Debugf("received record: metadata=%s payload=%s", metadata, payload)
 }
 
 func (s *APIServer) healthHandler() httprouter.Handle {

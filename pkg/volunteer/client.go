@@ -13,19 +13,17 @@ import (
 )
 
 var (
-	DefaultGenerationInterval = time.Hour
+	DefaultGenerationInterval = time.Day
 
-	StatsMetadataFieldGeneratedAt = "generated_at"
+	MetadataFieldTimestamp = "timestamp"
 )
 
-type TectonicPayload struct {
-	KubernetesNodes []node `json:"kubernetesNodes"`
-	ClusterID       string `json:"clusterID"`
+type Payload struct {
+	Nodes     []node `json:"nodes"`
+	ClusterID string `json:"clusterID"`
 }
 
 type Config struct {
-	AccountID       string
-	AccountSecret   string
 	ClusterID       string
 	Interval        time.Duration
 	CollectorScheme string
@@ -41,12 +39,6 @@ func (cfg *Config) CollectorHTTPClient() *http.Client {
 }
 
 func (cfg *Config) Valid() error {
-	if cfg.AccountID == "" {
-		return errors.New("volunteer config invalid: empty account ID")
-	}
-	if cfg.AccountSecret == "" {
-		return errors.New("volunteer config invalid: empty account secret")
-	}
 	if cfg.ClusterID == "" {
 		return errors.New("volunteer config invalid: empty cluster ID")
 	}
@@ -115,31 +107,29 @@ func (v *volunteer) Run() {
 	return
 }
 
-func (v *volunteer) payload() (TectonicPayload, error) {
+func (v *volunteer) payload() (Payload, error) {
 	nodes, err := v.nodeLister.List()
 	if err != nil {
-		return TectonicPayload{}, err
+		return Payload{}, err
 	}
 
 	//TODO(bcwaldon): add license and cluster version info
-	p := TectonicPayload{
-		ClusterID:       v.config.ClusterID,
-		KubernetesNodes: nodes,
+	p := Payload{
+		ClusterID: v.config.ClusterID,
+		Nodes:     nodes,
 	}
 
 	return p, nil
 }
 
-func (v *volunteer) send(p TectonicPayload) error {
+func (v *volunteer) send(p Payload) error {
 	m := map[string]string{
-		StatsMetadataFieldGeneratedAt: strconv.FormatInt(time.Now().Unix(), 10),
+		MetadataFieldTimestamp: strconv.FormatInt(time.Now().Unix(), 10),
 	}
 
 	r := report.Record{
-		AccountID:     v.config.AccountID,
-		AccountSecret: v.config.AccountSecret,
-		Metadata:      m,
-		Payload:       p,
+		Metadata: m,
+		Payload:  p,
 	}
 
 	return v.recordRepo.Store(r)

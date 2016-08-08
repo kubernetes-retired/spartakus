@@ -24,12 +24,10 @@ func init() {
 }
 
 type dbRecord struct {
-	ID            int    `db:"id"`
-	AccountID     string `db:"account_id"`
-	AccountSecret string `db:"account_secret"`
-	Metadata      []byte `db:"metadata"`
-	Payload       []byte `db:"payload"`
-	CreatedAt     int64  `db:"created_at"`
+	ID        int    `db:"id"`
+	Metadata  []byte `db:"metadata"`
+	Payload   []byte `db:"payload"`
+	CreatedAt int64  `db:"created_at"`
 }
 
 func (d *dbRecord) fromRecord(r report.Record) error {
@@ -42,8 +40,6 @@ func (d *dbRecord) fromRecord(r report.Record) error {
 		return err
 	}
 
-	d.AccountID = r.AccountID
-	d.AccountSecret = r.AccountSecret
 	d.Metadata = mb
 	d.Payload = pb
 

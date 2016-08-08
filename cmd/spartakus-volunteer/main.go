@@ -24,8 +24,6 @@ func main() {
 
 	var cfg volunteer.Config
 	fs.DurationVar(&cfg.Interval, "generation-interval", volunteer.DefaultGenerationInterval, "Period of report generation attempts")
-	fs.StringVar(&cfg.AccountID, "account-id", "", "Tectonic account identifier")
-	fs.StringVar(&cfg.AccountSecret, "account-secret", "", "Tectonic account secret")
 	fs.StringVar(&cfg.ClusterID, "cluster-id", "", "Tectonic cluster identifier")
 	fs.StringVar(&cfg.CollectorScheme, "collector-scheme", "https", "Send reports to collector host using this URL scheme (http or https)")
 	fs.StringVar(&cfg.CollectorHost, "collector-host", "spartakus.k8s.io", "Send generated reports to this Spartakus collector host")
