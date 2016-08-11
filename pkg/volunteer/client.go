@@ -8,12 +8,11 @@ import (
 	"time"
 
 	kclient "k8s.io/kubernetes/pkg/client/unversioned"
-
 	"k8s.io/spartakus/pkg/report"
 )
 
 var (
-	DefaultGenerationInterval = time.Day
+	DefaultGenerationInterval = 24 * time.Hour
 
 	MetadataFieldTimestamp = "timestamp"
 )
@@ -86,23 +85,23 @@ type volunteer struct {
 }
 
 func (v *volunteer) Run() {
-	log.Infof("started volunteer")
+	logger.Infof("started volunteer")
 	for {
-		log.Infof("next attempt in %v", v.config.Interval)
+		logger.Infof("next attempt in %v", v.config.Interval)
 		<-time.After(v.config.Interval)
 
 		p, err := v.payload()
 		if err != nil {
-			log.Errorf("failed generating report: %v", err)
+			logger.Errorf("failed generating report: %v", err)
 			continue
 		}
 
 		if err = v.send(p); err != nil {
-			log.Errorf("failed sending report: %v", err)
+			logger.Errorf("failed sending report: %v", err)
 			continue
 		}
 
-		log.Infof("report successfully sent to collector")
+		logger.Infof("report successfully sent to collector")
 	}
 	return
 }

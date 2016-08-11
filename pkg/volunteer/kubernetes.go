@@ -32,7 +32,7 @@ func nodeFromKubernetesAPINode(kn kapi.Node) node {
 		Status: nodeStatus{
 			Capacity: make(map[string]string),
 			NodeInfo: nodeInfo{
-				OSImage:                 kn.Status.NodeInfo.OsImage,
+				OSImage:                 kn.Status.NodeInfo.OSImage,
 				KernelVersion:           kn.Status.NodeInfo.KernelVersion,
 				ContainerRuntimeVersion: kn.Status.NodeInfo.ContainerRuntimeVersion,
 				KubeletVersion:          kn.Status.NodeInfo.KubeletVersion,
@@ -50,7 +50,10 @@ type kubernetesClientWrapper struct {
 }
 
 func (k *kubernetesClientWrapper) List() ([]node, error) {
-	knl, err := k.client.Nodes().List(klabels.Everything(), kfields.Everything())
+	knl, err := k.client.Nodes().List(kapi.ListOptions{
+		LabelSelector: klabels.Everything(),
+		FieldSelector: kfields.Everything(),
+	})
 	if err != nil {
 		return nil, err
 	}
