@@ -24,9 +24,10 @@ func main() {
 
 	var cfg volunteer.Config
 	fs.DurationVar(&cfg.Interval, "generation-interval", volunteer.DefaultGenerationInterval, "Period of report generation attempts")
-	fs.StringVar(&cfg.ClusterID, "cluster-id", "", "Tectonic cluster identifier")
-	fs.StringVar(&cfg.CollectorScheme, "collector-scheme", "https", "Send reports to collector host using this URL scheme (http or https)")
-	fs.StringVar(&cfg.CollectorHost, "collector-host", "spartakus.k8s.io", "Send generated reports to this Spartakus collector host")
+	//FIXME: rename to UID or UUID or GUID?
+	fs.StringVar(&cfg.ClusterID, "cluster-id", "", "Your cluster GUID")
+	//FIXME: need SSL
+	fs.StringVar(&cfg.Collector, "collector", "http://spartakus.k8s.io", "Send generated reports to this Spartakus collector (use - for stdout)")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		log.Fatalf("flag parsing failed: %v", err)

@@ -1,54 +1,35 @@
 package volunteer
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	kclient "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/spartakus/pkg/report"
 )
 
-var (
-	DefaultGenerationInterval = 24 * time.Hour
-
-	MetadataFieldTimestamp = "timestamp"
-)
-
-type Payload struct {
-	Nodes     []node `json:"nodes"`
-	ClusterID string `json:"clusterID"`
-}
+const DefaultGenerationInterval = 24 * time.Hour
 
 type Config struct {
-	ClusterID       string
-	Interval        time.Duration
-	CollectorScheme string
-	CollectorHost   string
-}
-
-func (cfg *Config) CollectorURL() url.URL {
-	return url.URL{Scheme: cfg.CollectorScheme, Host: cfg.CollectorHost}
-}
-
-func (cfg *Config) CollectorHTTPClient() *http.Client {
-	return http.DefaultClient
+	ClusterID string
+	Interval  time.Duration
+	Collector string
 }
 
 func (cfg *Config) Valid() error {
 	if cfg.ClusterID == "" {
-		return errors.New("volunteer config invalid: empty cluster ID")
+		return fmt.Errorf("volunteer config invalid: empty cluster ID")
 	}
 	if cfg.Interval == time.Duration(0) {
-		return errors.New("volunteer config invalid: invalid generation interval")
+		return fmt.Errorf("volunteer config invalid: invalid generation interval")
 	}
-	if cfg.CollectorScheme != "http" && cfg.CollectorScheme != "https" {
-		return errors.New("volunteer config invalid: invalid collector scheme, must be http/https")
+	if cfg.Collector == "" {
+		return fmt.Errorf("volunteer config invalid: empty collector")
 	}
-	if cfg.CollectorHost == "" {
-		return errors.New("volunteer config invalid: empty collector host")
+	if _, err := url.Parse(cfg.Collector); err != nil {
+		return fmt.Errorf("volunteer config invalid: collector: %v", err)
 	}
 	return nil
 }
@@ -64,72 +45,82 @@ func New(cfg Config) (*volunteer, error) {
 	}
 	kcw := &kubernetesClientWrapper{client: kc}
 
-	rRepo, err := NewHTTPRecordRepo(cfg.CollectorHTTPClient(), cfg.CollectorURL())
+	sender, err := newRecordSender(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	gen := volunteer{
-		config:     cfg,
-		recordRepo: rRepo,
-		nodeLister: kcw,
+		config:          cfg,
+		recordSender:    sender,
+		nodeLister:      kcw,
+		serverVersioner: kcw,
 	}
 
 	return &gen, nil
 }
 
+type recordSender interface {
+	Send(report.Record) error
+}
+
+func newRecordSender(cfg Config) (recordSender, error) {
+	if cfg.Collector == "-" {
+		return newStdoutRecordSender()
+	} else {
+		url, _ := url.Parse(cfg.Collector)
+		return newHTTPRecordSender(http.DefaultClient, *url)
+	}
+}
+
 type volunteer struct {
-	config     Config
-	nodeLister nodeLister
-	recordRepo report.RecordRepo
+	config          Config
+	recordSender    recordSender
+	nodeLister      nodeLister
+	serverVersioner serverVersioner
 }
 
 func (v *volunteer) Run() {
 	logger.Infof("started volunteer")
 	for {
-		logger.Infof("next attempt in %v", v.config.Interval)
-		<-time.After(v.config.Interval)
-
-		p, err := v.payload()
+		rec, err := v.generateRecord()
 		if err != nil {
 			logger.Errorf("failed generating report: %v", err)
 			continue
 		}
 
-		if err = v.send(p); err != nil {
+		if err = v.send(rec); err != nil {
 			logger.Errorf("failed sending report: %v", err)
 			continue
 		}
 
 		logger.Infof("report successfully sent to collector")
+		logger.Infof("next attempt in %v", v.config.Interval)
+		<-time.After(v.config.Interval)
 	}
 	return
 }
 
-func (v *volunteer) payload() (Payload, error) {
+func (v *volunteer) generateRecord() (report.Record, error) {
+	svrVer, err := v.serverVersioner.ServerVersion()
+	if err != nil {
+		return report.Record{}, err
+	}
+
 	nodes, err := v.nodeLister.List()
 	if err != nil {
-		return Payload{}, err
+		return report.Record{}, err
 	}
 
-	//TODO(bcwaldon): add license and cluster version info
-	p := Payload{
-		ClusterID: v.config.ClusterID,
-		Nodes:     nodes,
+	rec := report.Record{
+		ID:            v.config.ClusterID,
+		MasterVersion: &svrVer,
+		Nodes:         nodes,
 	}
 
-	return p, nil
+	return rec, nil
 }
 
-func (v *volunteer) send(p Payload) error {
-	m := map[string]string{
-		MetadataFieldTimestamp: strconv.FormatInt(time.Now().Unix(), 10),
-	}
-
-	r := report.Record{
-		Metadata: m,
-		Payload:  p,
-	}
-
-	return v.recordRepo.Store(r)
+func (v *volunteer) send(rec report.Record) error {
+	return v.recordSender.Send(rec)
 }

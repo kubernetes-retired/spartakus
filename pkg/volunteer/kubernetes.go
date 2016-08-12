@@ -1,55 +1,58 @@
 package volunteer
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+
 	kapi "k8s.io/kubernetes/pkg/api"
 	kclient "k8s.io/kubernetes/pkg/client/unversioned"
 	kfields "k8s.io/kubernetes/pkg/fields"
 	klabels "k8s.io/kubernetes/pkg/labels"
+	"k8s.io/spartakus/pkg/report"
 )
 
 type nodeLister interface {
-	List() ([]node, error)
+	List() ([]report.Node, error)
 }
 
-type node struct {
-	Status nodeStatus `json:"status"`
+type serverVersioner interface {
+	ServerVersion() (string, error)
 }
 
-type nodeStatus struct {
-	Capacity map[string]string `json:"capacity"`
-	NodeInfo nodeInfo          `json:"nodeInfo"`
-}
-
-type nodeInfo struct {
-	OSImage                 string `json:"osImage"`
-	KernelVersion           string `json:"kernelVersion"`
-	ContainerRuntimeVersion string `json:"containerRuntimeVersion"`
-	KubeletVersion          string `json:"kubeletVersion"`
-}
-
-func nodeFromKubernetesAPINode(kn kapi.Node) node {
-	n := node{
-		Status: nodeStatus{
-			Capacity: make(map[string]string),
-			NodeInfo: nodeInfo{
-				OSImage:                 kn.Status.NodeInfo.OSImage,
-				KernelVersion:           kn.Status.NodeInfo.KernelVersion,
-				ContainerRuntimeVersion: kn.Status.NodeInfo.ContainerRuntimeVersion,
-				KubeletVersion:          kn.Status.NodeInfo.KubeletVersion,
-			},
-		},
+func nodeFromKubernetesAPINode(kn kapi.Node) report.Node {
+	n := report.Node{
+		ID:                      hashOf(kn.Name),
+		OSImage:                 strPtr(kn.Status.NodeInfo.OSImage),
+		KernelVersion:           strPtr(kn.Status.NodeInfo.KernelVersion),
+		ContainerRuntimeVersion: strPtr(kn.Status.NodeInfo.ContainerRuntimeVersion),
+		KubeletVersion:          strPtr(kn.Status.NodeInfo.KubeletVersion),
 	}
 	for k, v := range kn.Status.Capacity {
-		n.Status.Capacity[string(k)] = v.String()
+		n.Capacity = append(n.Capacity, report.Resource{
+			Resource: string(k),
+			Value:    v.String(),
+		})
 	}
 	return n
+}
+
+func hashOf(str string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(str))
+	return hex.EncodeToString(hasher.Sum(nil)[0:])
+}
+
+func strPtr(str string) *string {
+	p := new(string)
+	*p = str
+	return p
 }
 
 type kubernetesClientWrapper struct {
 	client *kclient.Client
 }
 
-func (k *kubernetesClientWrapper) List() ([]node, error) {
+func (k *kubernetesClientWrapper) List() ([]report.Node, error) {
 	knl, err := k.client.Nodes().List(kapi.ListOptions{
 		LabelSelector: klabels.Everything(),
 		FieldSelector: kfields.Everything(),
@@ -57,9 +60,17 @@ func (k *kubernetesClientWrapper) List() ([]node, error) {
 	if err != nil {
 		return nil, err
 	}
-	nodes := make([]node, len(knl.Items))
+	nodes := make([]report.Node, len(knl.Items))
 	for i, kn := range knl.Items {
 		nodes[i] = nodeFromKubernetesAPINode(kn)
 	}
 	return nodes, nil
+}
+
+func (k *kubernetesClientWrapper) ServerVersion() (string, error) {
+	i, err := k.client.Discovery().ServerVersion()
+	if err != nil {
+		return "", err
+	}
+	return i.String(), nil
 }

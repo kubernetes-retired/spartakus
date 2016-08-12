@@ -14,15 +14,15 @@ var (
 	statsEndpoint = "/api/v1/stats"
 )
 
-// NewHTTPRecordRepo returns a RecordRepo that interacts with a
+// newHTTPRecordSender returns a RecordSender that interacts with a
 // collector API using the provided HTTP client.
-func NewHTTPRecordRepo(c *http.Client, u url.URL) (report.RecordRepo, error) {
+func newHTTPRecordSender(c *http.Client, u url.URL) (*httpRecordSender, error) {
 	p, err := u.Parse(statsEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("volunteer: unable to prepare API URL: %v", err)
 	}
 
-	r := &httpRecordRepo{
+	r := &httpRecordSender{
 		statsURL: p.String(),
 		client:   c,
 	}
@@ -30,12 +30,12 @@ func NewHTTPRecordRepo(c *http.Client, u url.URL) (report.RecordRepo, error) {
 	return r, nil
 }
 
-type httpRecordRepo struct {
+type httpRecordSender struct {
 	statsURL string
 	client   *http.Client
 }
 
-func (h *httpRecordRepo) Store(r report.Record) error {
+func (h *httpRecordSender) Send(r report.Record) error {
 	body, err := json.Marshal(r)
 	if err != nil {
 		return fmt.Errorf("volunteer: unable to encode HTTP request body: %v", err)
