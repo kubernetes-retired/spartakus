@@ -23,8 +23,6 @@ func main() {
 
 	vFlag := fs.Int("v", 0, "Set the logging verbosity level; higher values log more")
 	versionFlag := fs.Bool("version", false, "Print version information and exit")
-	//FIXME
-	//logQueries := fs.Bool("log-queries", false, "Log all database queries")
 
 	port := fs.Int("port", 8080, "Port on which to listen")
 
@@ -62,7 +60,6 @@ func main() {
 	//log.Fatalf("failed building DB connection: %v", err)
 	//}
 
-	// FIXME: wrap in a New()
 	srv := &collector.APIServer{
 		Log:  log,
 		Port: *port,
@@ -70,7 +67,6 @@ func main() {
 		//Database: collector.NewDBRecordRepo(conn),
 		Database: nullDatabase{},
 		Version:  VERSION,
-		//LogQueries: *logQueries, //FIXME: pass logger to apiserver
 	}
 	if err := srv.Run(); err != nil {
 		log.Errorf("FATAL: server error: %v", err)

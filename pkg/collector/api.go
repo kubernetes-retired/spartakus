@@ -29,11 +29,6 @@ type APIServer struct {
 	Version  string
 }
 
-//FIXME: need this?
-func (s *APIServer) Name() string {
-	return "Spartakus Collector"
-}
-
 func (s *APIServer) Run() error {
 	logger := logWriter{
 		log: s.Log,
@@ -44,7 +39,7 @@ func (s *APIServer) Run() error {
 		Handler: handler,
 	}
 
-	s.Log.V(0).Infof("%s binding to %s", s.Name(), srv.Addr)
+	s.Log.V(0).Infof("binding to %s", srv.Addr)
 
 	return srv.ListenAndServe()
 }
@@ -84,7 +79,6 @@ func (s *APIServer) storeRecordHandler() httprouter.Handle {
 }
 
 func (s *APIServer) logRecord(r *report.Record) {
-	//FIXME: this should be done before unmarshalling?
 	j, err := json.Marshal(r)
 	if err != nil {
 		s.Log.V(9).Infof("failed to decode record: %v", err)
@@ -108,7 +102,7 @@ func (s *APIServer) healthHandler() httprouter.Handle {
 type nopHealthCheckable struct{}
 
 func (c *nopHealthCheckable) Healthy() error {
-	//TODO(bcwaldon): fill this in
+	//FIXME: fill this in
 	return nil
 }
 
