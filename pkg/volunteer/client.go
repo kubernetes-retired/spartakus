@@ -7,6 +7,7 @@ import (
 	"time"
 
 	kclient "k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
 )
 
@@ -34,7 +35,7 @@ func (cfg *Config) Valid() error {
 	return nil
 }
 
-func New(cfg Config) (*volunteer, error) {
+func New(cfg Config, log logr.Logger) (*volunteer, error) {
 	if err := cfg.Valid(); err != nil {
 		return nil, err
 	}
@@ -52,6 +53,7 @@ func New(cfg Config) (*volunteer, error) {
 
 	gen := volunteer{
 		config:          cfg,
+		log:             log,
 		recordSender:    sender,
 		nodeLister:      kcw,
 		serverVersioner: kcw,
@@ -75,27 +77,28 @@ func newRecordSender(cfg Config) (recordSender, error) {
 
 type volunteer struct {
 	config          Config
+	log             logr.Logger
 	recordSender    recordSender
 	nodeLister      nodeLister
 	serverVersioner serverVersioner
 }
 
 func (v *volunteer) Run() {
-	logger.Infof("started volunteer")
+	v.log.V(0).Infof("started volunteer")
 	for {
 		rec, err := v.generateRecord()
 		if err != nil {
-			logger.Errorf("failed generating report: %v", err)
+			v.log.Errorf("failed generating report: %v", err)
 			continue
 		}
 
 		if err = v.send(rec); err != nil {
-			logger.Errorf("failed sending report: %v", err)
+			v.log.Errorf("failed sending report: %v", err)
 			continue
 		}
 
-		logger.Infof("report successfully sent to collector")
-		logger.Infof("next attempt in %v", v.config.Interval)
+		v.log.V(0).Infof("report successfully sent to collector")
+		v.log.V(0).Infof("next attempt in %v", v.config.Interval)
 		<-time.After(v.config.Interval)
 	}
 	return

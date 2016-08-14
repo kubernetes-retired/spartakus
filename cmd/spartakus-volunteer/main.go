@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/coreos/pkg/capnslog"
-
+	"k8s.io/spartakus/pkg/glogr"
 	"k8s.io/spartakus/pkg/volunteer"
 )
 
@@ -14,13 +13,12 @@ var (
 	VERSION = "UNKNOWN"
 )
 
-var log = capnslog.NewPackageLogger("k8s.io/spartakus/cmd", "spartakus-volunteer")
+var log = glogr.NewMustSucceed()
 
 func main() {
 	fs := flag.NewFlagSet("spartakus-volunteer", flag.ExitOnError)
 
 	ver := fs.Bool("version", false, "Print version information and exit")
-	logDebug := fs.Bool("log-debug", false, "Log debug-level information")
 
 	var cfg volunteer.Config
 	fs.DurationVar(&cfg.Interval, "generation-interval", volunteer.DefaultGenerationInterval, "Period of report generation attempts")
@@ -30,7 +28,8 @@ func main() {
 	fs.StringVar(&cfg.Collector, "collector", "http://spartakus.k8s.io", "Send generated reports to this Spartakus collector (use - for stdout)")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
-		log.Fatalf("flag parsing failed: %v", err)
+		log.Errorf("FATAL: flag parsing failed: %v", err)
+		os.Exit(1)
 	}
 
 	if *ver {
@@ -38,14 +37,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	capnslog.SetFormatter(capnslog.NewStringFormatter(os.Stderr))
-	if *logDebug {
-		capnslog.SetGlobalLogLevel(capnslog.DEBUG)
-	}
-
-	volunteer, err := volunteer.New(cfg)
+	volunteer, err := volunteer.New(cfg, log)
 	if err != nil {
-		log.Fatalf("failed building volunteer: %v", err)
+		log.Errorf("FATAL: failed building volunteer: %v", err)
+		os.Exit(1)
 	}
 
 	volunteer.Run()

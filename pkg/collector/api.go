@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/coreos/pkg/health"
 	"github.com/gorilla/handlers"
 	"github.com/julienschmidt/httprouter"
 
+	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
 )
 
@@ -23,6 +23,7 @@ var (
 )
 
 type APIServer struct {
+	Log      logr.Logger
 	Port     int
 	Database database
 	Version  string
@@ -34,9 +35,8 @@ func (s *APIServer) Name() string {
 }
 
 func (s *APIServer) Run() error {
-	logger := &logWriter{
-		log:   log,
-		level: capnslog.INFO,
+	logger := logWriter{
+		log: s.Log,
 	}
 	handler := handlers.LoggingHandler(logger, s.newHandler())
 	srv := &http.Server{
@@ -44,7 +44,7 @@ func (s *APIServer) Run() error {
 		Handler: handler,
 	}
 
-	log.Infof("%s binding to %s", s.Name(), srv.Addr)
+	s.Log.V(0).Infof("%s binding to %s", s.Name(), srv.Addr)
 
 	return srv.ListenAndServe()
 }
@@ -70,12 +70,8 @@ func (s *APIServer) storeRecordHandler() httprouter.Handle {
 			WriteError(w, http.StatusBadRequest, err)
 			return
 		}
-
 		rec.Timestamp = strconv.FormatInt(time.Now().Unix(), 10)
-
-		if log.LevelAt(capnslog.DEBUG) {
-			logRecord(&rec)
-		}
+		s.logRecord(&rec)
 
 		if err := s.Database.Store(rec); err != nil {
 			WriteError(w, http.StatusInternalServerError, err)
@@ -87,13 +83,13 @@ func (s *APIServer) storeRecordHandler() httprouter.Handle {
 	return ContentTypeMiddleware(handle, "application/json")
 }
 
-func logRecord(r *report.Record) {
+func (s *APIServer) logRecord(r *report.Record) {
 	//FIXME: this should be done before unmarshalling?
 	j, err := json.Marshal(r)
 	if err != nil {
-		log.Debugf("failed to decode record: %v", err)
+		s.Log.V(9).Infof("failed to decode record: %v", err)
 	} else {
-		log.Debugf("received record: %s", string(j))
+		s.Log.V(9).Infof("received record: %s", string(j))
 	}
 }
 
@@ -120,7 +116,7 @@ func (s *APIServer) versionHandler() httprouter.Handle {
 	return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte(s.Version)); err != nil {
-			log.Errorf("failed writing version response: %v", err)
+			s.Log.Errorf("failed writing version response: %v", err)
 		}
 	}
 }
