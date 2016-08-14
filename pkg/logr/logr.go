@@ -11,8 +11,7 @@ package logr
 
 // InfoLogger represents the ability to log non-error messages.
 type InfoLogger interface {
-	// Info logs a non-error message.  This is behaviorally akin to fmt.Println,
-	// rather than fmt.Print.
+	// Info logs a non-error message.  This is behaviorally akin to fmt.Print.
 	Info(args ...interface{})
 
 	// Infof logs a formatted non-error message.
@@ -31,8 +30,7 @@ type Logger interface {
 	// example, logger.Info() produces the same result as logger.V(0).Info.
 	InfoLogger
 
-	// Error logs a error message.  This is behaviorally akin to fmt.Println,
-	// rather than fmt.Print.
+	// Error logs a error message.  This is behaviorally akin to fmt.Print.
 	Error(args ...interface{})
 
 	// Errorf logs a formatted error message.

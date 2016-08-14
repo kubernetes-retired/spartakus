@@ -2,40 +2,46 @@
 // github.com/golang/glog.
 package glogr
 
-// TODO: a clean way for apps to set the --v flag
 // TODO: a clean way for apps to set the --vmodule flag
 // TODO: a clean way for apps to set the --log_backtrace_at flag
 
 import (
 	"flag"
 	"fmt"
-	"os"
+	"strconv"
 
 	"github.com/golang/glog"
 	"k8s.io/spartakus/pkg/logr"
 )
 
-func New() (logr.Logger, error) {
+// New returns a logr.Logger which is implemented by glog.
+
+// Because glog only offers global logging functions (as opposed to logger
+// objects), this will set some global parameters.  For example, if you call
+// this more than once with different v arguments, the global verbosty level
+// will change for all instances.
+//
+// Because glog does not offer an option to log to an arbitrary output, this
+// forces logging to go to stderr.
+func New(v int) (logr.Logger, error) {
 	// Force logging to stderr.
-	toStderr := flag.Lookup("logtostderr")
-	if toStderr == nil {
+	stderrFlag := flag.Lookup("logtostderr")
+	if stderrFlag == nil {
 		return nil, fmt.Errorf("can't find flag 'logtostderr'")
 	}
-	toStderr.Value.Set("true")
+	stderrFlag.Value.Set("true")
+
+	// Set the V level.
+	vFlag := flag.Lookup("v")
+	if vFlag == nil {
+		return nil, fmt.Errorf("can't find flag 'v'")
+	}
+	vFlag.Value.Set(strconv.Itoa(v))
 
 	return glogger{
 		level:  0,
 		prefix: "",
 	}, nil
-}
-
-func NewMustSucceed() logr.Logger {
-	logger, err := New()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ABORT: failed to initialize glogr: %v", err)
-		os.Exit(7)
-	}
-	return logger
 }
 
 type glogger struct {
@@ -48,7 +54,7 @@ func prepend(prefix interface{}, args []interface{}) []interface{} {
 }
 
 func (l glogger) Info(args ...interface{}) {
-	glog.Infoln(prepend(l.prefix, args)...)
+	glog.InfoDepth(1, prepend(l.prefix, args)...)
 }
 
 func (l glogger) Infof(format string, args ...interface{}) {
@@ -60,7 +66,7 @@ func (l glogger) Enabled() bool {
 }
 
 func (l glogger) Error(args ...interface{}) {
-	glog.Errorln(prepend(l.prefix, args)...)
+	glog.ErrorDepth(1, prepend(l.prefix, args)...)
 }
 
 func (l glogger) Errorf(format string, args ...interface{}) {
