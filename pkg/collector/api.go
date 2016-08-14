@@ -3,6 +3,7 @@ package collector
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,51 +17,41 @@ import (
 )
 
 var (
-	StatsEndpoint   = "/api/v1/stats"
-	HealthEndpoint  = "/health"
-	VersionEndpoint = "/version"
-
-	StatsMetadataFieldReceivedAt   = "receivedAt"
-	StatsMetadataFieldReceivedFrom = "receivedFrom"
+	CollectorEndpoint = "/api/v1/stats"
+	HealthEndpoint    = "/health"
+	VersionEndpoint   = "/version"
 )
 
 type APIServer struct {
-	Host       string
-	RecordRepo report.RecordRepo
-	Version    string
+	Port     int
+	Database database
+	Version  string
 }
 
+//FIXME: need this?
 func (s *APIServer) Name() string {
-	return "Stats API Server"
+	return "Spartakus Collector"
 }
 
-func (s *APIServer) Start() error {
-	lw := &logWriter{
+func (s *APIServer) Run() error {
+	logger := &logWriter{
 		log:   log,
 		level: capnslog.INFO,
 	}
-	handler := handlers.LoggingHandler(lw, s.newHandler())
+	handler := handlers.LoggingHandler(logger, s.newHandler())
 	srv := &http.Server{
-		Addr:    s.Host,
+		Addr:    net.JoinHostPort("", strconv.Itoa(s.Port)),
 		Handler: handler,
 	}
 
 	log.Infof("%s binding to %s", s.Name(), srv.Addr)
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			log.Errorf("%s exited uncleanly: %v", s.Name(), err)
-		} else {
-			log.Infof("%s exited cleanly", s.Name())
-		}
-	}()
-
-	return nil
+	return srv.ListenAndServe()
 }
 
 func (s *APIServer) newHandler() http.Handler {
 	m := httprouter.New()
-	m.Handle("POST", StatsEndpoint, s.storeRecordHandler())
+	m.Handle("POST", CollectorEndpoint, s.storeRecordHandler())
 	m.Handle("GET", HealthEndpoint, s.healthHandler())
 	m.Handle("GET", VersionEndpoint, s.versionHandler())
 	return m
@@ -80,17 +71,13 @@ func (s *APIServer) storeRecordHandler() httprouter.Handle {
 			return
 		}
 
-		if rec.Metadata == nil {
-			rec.Metadata = make(map[string]string)
-		}
-		rec.Metadata[StatsMetadataFieldReceivedAt] = strconv.FormatInt(time.Now().Unix(), 10)
-		rec.Metadata[StatsMetadataFieldReceivedFrom] = r.Header.Get("X-Real-IP")
+		rec.Timestamp = strconv.FormatInt(time.Now().Unix(), 10)
 
 		if log.LevelAt(capnslog.DEBUG) {
 			logRecord(&rec)
 		}
 
-		if err := s.RecordRepo.Store(rec); err != nil {
+		if err := s.Database.Store(rec); err != nil {
 			WriteError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -101,17 +88,13 @@ func (s *APIServer) storeRecordHandler() httprouter.Handle {
 }
 
 func logRecord(r *report.Record) {
-	mb, err := json.Marshal(r.Metadata)
-	metadata := string(mb)
+	//FIXME: this should be done before unmarshalling?
+	j, err := json.Marshal(r)
 	if err != nil {
-		metadata = "N/A"
+		log.Debugf("failed to decode record: %v", err)
+	} else {
+		log.Debugf("received record: %s", string(j))
 	}
-	pb, err := json.Marshal(r.Payload)
-	payload := string(pb)
-	if err != nil {
-		payload = "N/A"
-	}
-	log.Debugf("received record: metadata=%s payload=%s", metadata, payload)
 }
 
 func (s *APIServer) healthHandler() httprouter.Handle {
@@ -140,4 +123,8 @@ func (s *APIServer) versionHandler() httprouter.Handle {
 			log.Errorf("failed writing version response: %v", err)
 		}
 	}
+}
+
+type database interface {
+	Store(report.Record) error
 }

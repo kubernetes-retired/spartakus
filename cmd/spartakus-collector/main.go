@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
 	"os"
 
 	"github.com/coreos/pkg/capnslog"
 
 	"k8s.io/spartakus/pkg/collector"
+	"k8s.io/spartakus/pkg/report"
 )
 
 var (
@@ -22,14 +22,15 @@ func main() {
 
 	ver := fs.Bool("version", false, "Print version information and exit")
 	logDebug := fs.Bool("log-debug", false, "Log debug-level information")
-	logQueries := fs.Bool("log-queries", false, "Log all database queries")
+	//FIXME
+	//logQueries := fs.Bool("log-queries", false, "Log all database queries")
 
-	listen := fs.String("listen", "127.0.0.1:8080", "Host and port to bind collector API")
+	port := fs.Int("port", 8080, "Port on which to listen")
 
-	var cfg collector.DBConfig
-	fs.StringVar(&cfg.DSN, "db-url", "", "DSN-formatted database connection string")
-	fs.IntVar(&cfg.MaxIdleConnections, "db-max-idle-conns", 0, "Maximum number of connections in the idle connection pool")
-	fs.IntVar(&cfg.MaxOpenConnections, "db-max-open-conns", 0, "Maximum number of open connections to the database")
+	//FIXME: BigQuery config
+	//var cfg collector.DBConfig
+	//fs.StringVar(&cfg.DSN, "db-url", "", "DSN-formatted database connection string")
+	//fs.IntVar(&cfg.MaxOpenConnections, "db-max-open-conns", 0, "Maximum number of open connections to the database")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		log.Fatalf("flag parsing failed: %v", err)
@@ -44,27 +45,33 @@ func main() {
 	if *logDebug {
 		capnslog.SetGlobalLogLevel(capnslog.DEBUG)
 	}
-	if *logQueries {
-		cfg.LogQueries = true
+
+	if *port < 1 || *port > 65535 {
+		log.Fatalf("invalid value for --port: must be between 1 and 65535")
 	}
 
-	if _, _, err := net.SplitHostPort(*listen); err != nil {
-		log.Fatalf("invalid value for --listen flag: %v", err)
-	}
-
-	conn, err := collector.NewDBConnection(cfg)
-	if err != nil {
-		log.Fatalf("failed building DB connection: %v", err)
-	}
+	// FIXME: BigQuery
+	//conn, err := collector.NewDBConnection(cfg)
+	//if err != nil {
+	//log.Fatalf("failed building DB connection: %v", err)
+	//}
 
 	srv := &collector.APIServer{
-		Host:       *listen,
-		RecordRepo: collector.NewDBRecordRepo(conn),
-		Version:    VERSION,
+		Port: *port,
+		//FIXME: BigQuery
+		//Database: collector.NewDBRecordRepo(conn),
+		Database: nullDatabase{},
+		Version:  VERSION,
+		//LogQueries: *logQueries, //FIXME: pass logger to apiserver
 	}
-	if err := srv.Start(); err != nil {
-		log.Fatalf("failed starting collector API: %v", err)
+	if err := srv.Run(); err != nil {
+		log.Fatalf("server error: %v", err)
 	}
+	log.Infof("server exiting cleanly")
+}
 
-	select {}
+type nullDatabase struct{}
+
+func (ndb nullDatabase) Store(_ report.Record) error {
+	return nil
 }

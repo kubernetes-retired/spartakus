@@ -113,7 +113,7 @@ func (v *volunteer) generateRecord() (report.Record, error) {
 	}
 
 	rec := report.Record{
-		ID:            v.config.ClusterID,
+		ClusterID:     v.config.ClusterID,
 		MasterVersion: &svrVer,
 		Nodes:         nodes,
 	}
