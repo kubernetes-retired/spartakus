@@ -16,11 +16,6 @@
 			"Rev": "31b736133b98f26d5e078ec9eb591666edfd091f"
 		},
 		{
-			"ImportPath": "github.com/coopernurse/gorp",
-			"Comment": "v1.7-1-g236e138",
-			"Rev": "236e1383df4c6b402e251d3fe2dcea50dab1faf1"
-		},
-		{
 			"ImportPath": "github.com/coreos/go-oidc/http",
 			"Rev": "5cf2aa52da8c574d3aa4458f471ad6ae2240fe6b"
 		},
@@ -146,16 +141,6 @@
 			"ImportPath": "github.com/julienschmidt/httprouter",
 			"Comment": "v1.1-3-g6aacfd5",
 			"Rev": "6aacfd5ab513e34f7e64ea9627ab9670371b34e7"
-		},
-		{
-			"ImportPath": "github.com/lib/pq",
-			"Comment": "go1.0-cutoff-58-g0dad96c",
-			"Rev": "0dad96c0b94f8dee039aa40467f767467392a0af"
-		},
-		{
-			"ImportPath": "github.com/lib/pq/oid",
-			"Comment": "go1.0-cutoff-58-g0dad96c",
-			"Rev": "0dad96c0b94f8dee039aa40467f767467392a0af"
 		},
 		{
 			"ImportPath": "github.com/matttproud/golang_protobuf_extensions/pbutil",
