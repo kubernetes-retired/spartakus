@@ -25,7 +25,7 @@ var (
 type APIServer struct {
 	Log      logr.Logger
 	Port     int
-	Database database
+	Database Database
 	Version  string
 }
 
@@ -115,6 +115,6 @@ func (s *APIServer) versionHandler() httprouter.Handle {
 	}
 }
 
-type database interface {
+type Database interface {
 	Store(report.Record) error
 }

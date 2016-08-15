@@ -7,6 +7,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.10.0-36-g08a8a7c",
+			"Rev": "08a8a7c27e3d058a8989316a850daad1c10bf4ab"
+		},
+		{
 			"ImportPath": "github.com/beorn7/perks/quantile",
 			"Rev": "3ac7bf7a47d159a033b107610db8a1b6575507a4"
 		},
@@ -189,6 +194,10 @@
 			"Rev": "a6ab08426bb262e2d190097751f5cfd1cfdfd17d"
 		},
 		{
+			"ImportPath": "github.com/prometheus/common/log",
+			"Rev": "a6ab08426bb262e2d190097751f5cfd1cfdfd17d"
+		},
+		{
 			"ImportPath": "github.com/prometheus/common/model",
 			"Rev": "a6ab08426bb262e2d190097751f5cfd1cfdfd17d"
 		},
@@ -239,6 +248,18 @@
 		{
 			"ImportPath": "golang.org/x/oauth2/jwt",
 			"Rev": "b5adcc2dcdf009d0391547edc6ecbaff889f5bb9"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "a646d33e2ee3172a661fc09bca23bb4889a41bc8"
+		},
+		{
+			"ImportPath": "google.golang.org/api/bigquery/v2",
+			"Rev": "4300f6b0c8a7f09e521dd0af2cee27e28846e037"
+		},
+		{
+			"ImportPath": "google.golang.org/api/gensupport",
+			"Rev": "4300f6b0c8a7f09e521dd0af2cee27e28846e037"
 		},
 		{
 			"ImportPath": "google.golang.org/api/googleapi",

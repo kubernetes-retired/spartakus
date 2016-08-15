@@ -110,12 +110,13 @@ func (v *volunteer) generateRecord() (report.Record, error) {
 		return report.Record{}, err
 	}
 
-	nodes, err := v.nodeLister.List()
+	nodes, err := v.nodeLister.ListNodes()
 	if err != nil {
 		return report.Record{}, err
 	}
 
 	rec := report.Record{
+		Version:       "abc123", //FIXME: from linker
 		ClusterID:     v.config.ClusterID,
 		MasterVersion: &svrVer,
 		Nodes:         nodes,

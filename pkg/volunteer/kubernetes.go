@@ -12,7 +12,7 @@ import (
 )
 
 type nodeLister interface {
-	List() ([]report.Node, error)
+	ListNodes() ([]report.Node, error)
 }
 
 type serverVersioner interface {
@@ -21,7 +21,7 @@ type serverVersioner interface {
 
 func nodeFromKubernetesAPINode(kn kapi.Node) report.Node {
 	n := report.Node{
-		ID:                      hashOf(kn.Name),
+		ID:                      hashOf(kn.Name), //FIXME: use machineID if present
 		OSImage:                 strPtr(kn.Status.NodeInfo.OSImage),
 		KernelVersion:           strPtr(kn.Status.NodeInfo.KernelVersion),
 		ContainerRuntimeVersion: strPtr(kn.Status.NodeInfo.ContainerRuntimeVersion),
@@ -52,7 +52,7 @@ type kubernetesClientWrapper struct {
 	client *kclient.Client
 }
 
-func (k *kubernetesClientWrapper) List() ([]report.Node, error) {
+func (k *kubernetesClientWrapper) ListNodes() ([]report.Node, error) {
 	knl, err := k.client.Nodes().List(kapi.ListOptions{
 		LabelSelector: klabels.Everything(),
 		FieldSelector: kfields.Everything(),
