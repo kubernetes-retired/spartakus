@@ -10,32 +10,7 @@ import (
 	"k8s.io/spartakus/pkg/report"
 )
 
-const DefaultGenerationInterval = 24 * time.Hour
-
-type Config struct {
-	ClusterID string
-	Interval  time.Duration
-	Database  database.Database
-}
-
-func (cfg *Config) Valid() error {
-	if cfg.ClusterID == "" {
-		return fmt.Errorf("volunteer config invalid: empty cluster ID")
-	}
-	if cfg.Interval == time.Duration(0) {
-		return fmt.Errorf("volunteer config invalid: invalid generation interval")
-	}
-	if cfg.Database == nil {
-		return fmt.Errorf("volunteer config invalid: no database")
-	}
-	return nil
-}
-
-func New(cfg Config, log logr.Logger) (*volunteer, error) {
-	if err := cfg.Valid(); err != nil {
-		return nil, err
-	}
-
+func New(log logr.Logger, clusterID string, period time.Duration, db database.Database) (*volunteer, error) {
 	kc, err := kclient.NewInCluster()
 	if err != nil {
 		return nil, err
@@ -43,8 +18,10 @@ func New(cfg Config, log logr.Logger) (*volunteer, error) {
 	kcw := &kubernetesClientWrapper{client: kc}
 
 	gen := volunteer{
-		config:          cfg,
 		log:             log,
+		clusterID:       clusterID,
+		period:          period,
+		database:        db,
 		nodeLister:      kcw,
 		serverVersioner: kcw,
 	}
@@ -53,13 +30,15 @@ func New(cfg Config, log logr.Logger) (*volunteer, error) {
 }
 
 type volunteer struct {
-	config          Config
+	clusterID       string
+	period          time.Duration
+	database        database.Database
 	log             logr.Logger
 	nodeLister      nodeLister
 	serverVersioner serverVersioner
 }
 
-func (v *volunteer) Run() {
+func (v *volunteer) Run() error {
 	v.log.V(0).Infof("started volunteer")
 	for {
 		rec, err := v.generateRecord()
@@ -74,10 +53,10 @@ func (v *volunteer) Run() {
 		}
 
 		v.log.V(0).Infof("report successfully sent to collector")
-		v.log.V(0).Infof("next attempt in %v", v.config.Interval)
-		<-time.After(v.config.Interval)
+		v.log.V(0).Infof("next attempt in %v", v.period)
+		<-time.After(v.period)
 	}
-	return
+	return fmt.Errorf("unexpected termination")
 }
 
 func (v *volunteer) generateRecord() (report.Record, error) {
@@ -93,7 +72,7 @@ func (v *volunteer) generateRecord() (report.Record, error) {
 
 	rec := report.Record{
 		Version:       "abc123", //FIXME: from linker
-		ClusterID:     v.config.ClusterID,
+		ClusterID:     v.clusterID,
 		MasterVersion: &svrVer,
 		Nodes:         nodes,
 	}
@@ -102,5 +81,5 @@ func (v *volunteer) generateRecord() (report.Record, error) {
 }
 
 func (v *volunteer) send(rec report.Record) error {
-	return v.config.Database.Store(rec)
+	return v.database.Store(rec)
 }

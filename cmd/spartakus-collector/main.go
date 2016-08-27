@@ -68,8 +68,8 @@ func main() {
 	}
 
 	if err := srv.Run(); err != nil {
-		log.Errorf("FATAL: server error: %v", err)
+		log.Errorf("FATAL: %v", err)
 		os.Exit(1)
 	}
-	log.V(0).Infof("server exiting cleanly")
+	log.V(0).Infof("exiting cleanly")
 }
