@@ -1,7 +1,9 @@
-package main
+package database
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/prometheus/common/log"
@@ -13,6 +15,46 @@ import (
 	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
 )
+
+func init() {
+	registerPlugin("bigquery", bigqueryPlugin{})
+}
+
+type bigqueryPlugin struct{}
+
+func (plug bigqueryPlugin) Attempt(log logr.Logger, dbspec string) (bool, Database, error) {
+	isMine, project, dataset, table, err := parseBigquerySpec(dbspec)
+	if !isMine {
+		return false, nil, nil
+	}
+	if err != nil {
+		return true, nil, err
+	}
+	db, err := newBigqueryDatabase(log, project, dataset, table)
+	return true, db, err
+}
+
+func (plug bigqueryPlugin) ExampleSpec() string {
+	return "bigquery://project.dataset.table"
+}
+
+var bqre = regexp.MustCompile(`^bigquery://([^.]+)\.([^.]+)\.([^.]+)$`)
+
+// Parse a bigquery spec, formatted as `bigquery://project.dataset.table`.  If
+// the argument appears to be a bigquery spec, the first return (bool) will be
+// true. The 3 string returns are project, dataset, and table respectively.
+// This will only return an error if it believes the argument is a biquery spec,
+// but it can't parse properly.
+func parseBigquerySpec(dbspec string) (bool, string, string, string, error) {
+	if !strings.HasPrefix(dbspec, "bigquery://") {
+		return false, "", "", "", nil
+	}
+	subs := bqre.FindStringSubmatch(dbspec)
+	if len(subs) != 3 {
+		return true, "", "", "", fmt.Errorf("invalid bigquery spec: %q", dbspec)
+	}
+	return true, subs[0], subs[1], subs[2], nil
+}
 
 func newBigqueryDatabase(log logr.Logger, project, dataset, table string) (collector.Database, error) {
 	ctx := context.Background()

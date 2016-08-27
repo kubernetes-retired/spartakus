@@ -2,11 +2,10 @@ package volunteer
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 
 	kclient "k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/spartakus/pkg/database"
 	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
 )
@@ -16,7 +15,7 @@ const DefaultGenerationInterval = 24 * time.Hour
 type Config struct {
 	ClusterID string
 	Interval  time.Duration
-	Collector string
+	Database  database.Database
 }
 
 func (cfg *Config) Valid() error {
@@ -26,11 +25,8 @@ func (cfg *Config) Valid() error {
 	if cfg.Interval == time.Duration(0) {
 		return fmt.Errorf("volunteer config invalid: invalid generation interval")
 	}
-	if cfg.Collector == "" {
-		return fmt.Errorf("volunteer config invalid: empty collector")
-	}
-	if _, err := url.Parse(cfg.Collector); err != nil {
-		return fmt.Errorf("volunteer config invalid: collector: %v", err)
+	if cfg.Database == nil {
+		return fmt.Errorf("volunteer config invalid: no database")
 	}
 	return nil
 }
@@ -46,15 +42,9 @@ func New(cfg Config, log logr.Logger) (*volunteer, error) {
 	}
 	kcw := &kubernetesClientWrapper{client: kc}
 
-	sender, err := newRecordSender(cfg)
-	if err != nil {
-		return nil, err
-	}
-
 	gen := volunteer{
 		config:          cfg,
 		log:             log,
-		recordSender:    sender,
 		nodeLister:      kcw,
 		serverVersioner: kcw,
 	}
@@ -62,23 +52,9 @@ func New(cfg Config, log logr.Logger) (*volunteer, error) {
 	return &gen, nil
 }
 
-type recordSender interface {
-	Send(report.Record) error
-}
-
-func newRecordSender(cfg Config) (recordSender, error) {
-	if cfg.Collector == "-" {
-		return newStdoutRecordSender()
-	} else {
-		url, _ := url.Parse(cfg.Collector)
-		return newHTTPRecordSender(http.DefaultClient, *url)
-	}
-}
-
 type volunteer struct {
 	config          Config
 	log             logr.Logger
-	recordSender    recordSender
 	nodeLister      nodeLister
 	serverVersioner serverVersioner
 }
@@ -126,5 +102,5 @@ func (v *volunteer) generateRecord() (report.Record, error) {
 }
 
 func (v *volunteer) send(rec report.Record) error {
-	return v.recordSender.Send(rec)
+	return v.config.Database.Store(rec)
 }
