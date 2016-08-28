@@ -13,7 +13,7 @@ import (
 )
 
 func New(log logr.Logger, clusterID string, period time.Duration, db database.Database) (*volunteer, error) {
-	kubeConfig, err := krest.InClusteonfig()
+	kubeConfig, err := krest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
