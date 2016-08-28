@@ -24,15 +24,15 @@ VERSION :=
 TAG := $(shell git describe --abbrev=0 --tags HEAD 2>/dev/null)
 COMMIT := $(shell git rev-parse HEAD)
 ifeq ($(TAG),)
-    VERSION := unknown+$(COMMIT)
+    VERSION := unknown-$(COMMIT)
 else
     ifeq ($(COMMIT), $(shell git rev-list -n1 $(TAG)))
         VERSION := $(TAG)
     else
-        VERSION := $(TAG)+$(COMMIT)
+        VERSION := $(TAG)-$(COMMIT)
     endif
 endif
-DIRTY := $(shell test -z "$$(git diff --shortstat 2>/dev/null)" || echo +dirty)
+DIRTY := $(shell test -z "$$(git diff --shortstat 2>/dev/null)" || echo -dirty)
 VERSION := $(VERSION)$(DIRTY)
 
 # Architectures supported: amd64, arm, arm64 and ppc64le
@@ -87,7 +87,7 @@ bin/$(ARCH)/$(BIN): FORCE
 	    "
 
 container: .container-$(ARCH)
-.container-$(ARCH): bin/$(ARCH)/$(BIN)
+.container-$(ARCH): bin/$(ARCH)/$(BIN) Dockerfile
 	@echo "container: $(IMAGE):$(VERSION)"
 	@docker build -t $(IMAGE):$(VERSION) --build-arg ARCH=$(ARCH) .
 	@touch $@
