@@ -18,14 +18,14 @@ func NewDatabase(log logr.Logger, dbspec string) (Database, error) {
 			continue
 		}
 		if err != nil {
-			return nil, fmt.Errorf("failed to create %q database: %v", name, err)
+			return nil, fmt.Errorf("failed to initialize %q: %v", name, err)
 		}
 		if db == nil {
-			return nil, fmt.Errorf("%q database was nil", name)
+			return nil, fmt.Errorf("no error, but result was nil: %q", name)
 		}
 		log.V(0).Infof("using %q database", name)
 		return db, nil
 	}
 
-	return nil, fmt.Errorf("unknown database: %q", dbspec)
+	return nil, fmt.Errorf("unknown spec: %q", dbspec)
 }

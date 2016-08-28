@@ -38,7 +38,7 @@ func (_ volunteerSubProgram) Validate() error {
 	return nil
 }
 
-func (_ volunteerSubProgram) Main(log logr.Logger) {
+func (_ volunteerSubProgram) Main(log logr.Logger) error {
 	if volunteerConfig.printDatabases {
 		fmt.Printf("Example values for --database:\n")
 		for _, str := range database.DatabaseOptions() {
@@ -49,19 +49,16 @@ func (_ volunteerSubProgram) Main(log logr.Logger) {
 
 	db, err := database.NewDatabase(log, volunteerConfig.database)
 	if err != nil {
-		log.Errorf("FATAL: failed to initialize database: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to initialize database: %v", err)
 	}
 
 	volunteer, err := volunteer.New(log, volunteerConfig.clusterID, volunteerConfig.period, db)
 	if err != nil {
-		log.Errorf("FATAL: failed building volunteer: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("failed initializing volunteer: %v", err)
 	}
 
 	if err := volunteer.Run(); err != nil {
-		log.Errorf("FATAL: %v", err)
-		os.Exit(1)
+		return err
 	}
-	log.V(0).Infof("exiting cleanly")
+	return nil
 }

@@ -19,7 +19,7 @@ func usage() {
 type subProgram interface {
 	AddFlags(fs *flag.FlagSet)
 	Validate() error
-	Main(log logr.Logger)
+	Main(log logr.Logger) error
 }
 
 func main() {
@@ -44,12 +44,13 @@ func main() {
 
 	prog.AddFlags(fs)
 	if err := fs.Parse(os.Args[1:]); err != nil {
-		fmt.Fprintf(os.Stderr, "FATAL: flag parsing failed: %v", err)
+		fmt.Fprintf(os.Stderr, "FATAL: flag parsing failed: %v\n", err)
 		os.Exit(1)
 	}
 
 	if err := prog.Validate(); err != nil {
-		fmt.Fprintf(os.Stderr, "FATAL: %v", err)
+		fmt.Fprintf(os.Stderr, "FATAL: %v\n", err)
+		os.Exit(1)
 	}
 
 	if *flPrintVersion {
@@ -60,11 +61,13 @@ func main() {
 	// Make a Logger instance.
 	log, err := glogr.New(*flV)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "FATAL: failed to initialize glogr: %v", err)
+		fmt.Fprintf(os.Stderr, "FATAL: failed to initialize glogr: %v\n", err)
 		os.Exit(1)
 	}
 	// From here on logging is available
 
-	prog.Main(log)
+	if err := prog.Main(log); err != nil {
+		log.Errorf("exiting: %v", err)
+	}
 	log.V(0).Infof("exiting cleanly")
 }

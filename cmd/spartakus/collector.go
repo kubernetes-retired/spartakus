@@ -31,7 +31,7 @@ func (_ collectorSubProgram) Validate() error {
 	return nil
 }
 
-func (_ collectorSubProgram) Main(log logr.Logger) {
+func (_ collectorSubProgram) Main(log logr.Logger) error {
 	if collectorConfig.printDatabases {
 		fmt.Printf("Example values for --database:\n")
 		for _, str := range database.DatabaseOptions() {
@@ -42,8 +42,7 @@ func (_ collectorSubProgram) Main(log logr.Logger) {
 
 	db, err := database.NewDatabase(log, collectorConfig.database)
 	if err != nil {
-		log.Errorf("FATAL: failed to initialize database: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to initialize database: %v", err)
 	}
 
 	srv := &collector.APIServer{
@@ -53,8 +52,7 @@ func (_ collectorSubProgram) Main(log logr.Logger) {
 	}
 
 	if err := srv.Run(); err != nil {
-		log.Errorf("FATAL: %v", err)
-		os.Exit(1)
+		return err
 	}
-	log.V(0).Infof("exiting cleanly")
+	return nil
 }
