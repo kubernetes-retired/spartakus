@@ -1,3 +1,0 @@
-FROM busybox
-ADD bin/spartakus-volunteer /spartakus-volunteer
-CMD /spartakus-volunteer

@@ -1,3 +1,0 @@
-FROM busybox
-ADD bin/spartakus-collector /spartakus-collector
-CMD /spartakus-collector
