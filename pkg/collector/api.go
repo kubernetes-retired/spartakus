@@ -14,6 +14,7 @@ import (
 
 	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
+	"k8s.io/spartakus/pkg/version"
 )
 
 var (
@@ -26,7 +27,6 @@ type APIServer struct {
 	Log      logr.Logger
 	Port     int
 	Database Database
-	Version  string
 }
 
 func (s *APIServer) Run() error {
@@ -109,7 +109,7 @@ func (c *nopHealthCheckable) Healthy() error {
 func (s *APIServer) versionHandler() httprouter.Handle {
 	return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte(s.Version)); err != nil {
+		if _, err := w.Write([]byte(version.VERSION)); err != nil {
 			s.Log.Errorf("failed writing version response: %v", err)
 		}
 	}

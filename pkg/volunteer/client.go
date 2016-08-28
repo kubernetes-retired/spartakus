@@ -8,6 +8,7 @@ import (
 	"k8s.io/spartakus/pkg/database"
 	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
+	"k8s.io/spartakus/pkg/version"
 )
 
 func New(log logr.Logger, clusterID string, period time.Duration, db database.Database) (*volunteer, error) {
@@ -71,7 +72,7 @@ func (v *volunteer) generateRecord() (report.Record, error) {
 	}
 
 	rec := report.Record{
-		Version:       "abc123", //FIXME: from linker
+		Version:       version.VERSION,
 		ClusterID:     v.clusterID,
 		MasterVersion: &svrVer,
 		Nodes:         nodes,

@@ -50,7 +50,6 @@ func (_ collectorSubProgram) Main(log logr.Logger) {
 		Log:      log,
 		Port:     collectorConfig.port,
 		Database: db,
-		Version:  VERSION,
 	}
 
 	if err := srv.Run(); err != nil {

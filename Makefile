@@ -20,13 +20,20 @@ GO_PKG = k8s.io/spartakus
 REGISTRY ?= gcr.io/google_containers
 IMAGE = $(REGISTRY)/$(BIN)-$(ARCH)
 
-COMMIT = $(shell git rev-parse HEAD)
-TAG = $(shell git describe --exact-match --abbrev=0 --tags $(COMMIT) 2>/dev/null)
+VERSION := 
+TAG := $(shell git describe --abbrev=0 --tags HEAD 2>/dev/null)
+COMMIT := $(shell git rev-parse HEAD)
 ifeq ($(TAG),)
-    TAG = git-$(COMMIT)
+    VERSION := unknown+$(COMMIT)
+else
+    ifeq ($(COMMIT), $(shell git rev-list -n1 $(TAG)))
+        VERSION := $(TAG)
+    else
+        VERSION := $(TAG)+$(COMMIT)
+    endif
 endif
-DIRTY = $(shell test -z "$$(git diff --shortstat 2>/dev/null)" || echo +dirty)
-VERSION = $(TAG)$(DIRTY)
+DIRTY := $(shell test -z "$$(git diff --shortstat 2>/dev/null)" || echo +dirty)
+VERSION := $(VERSION)$(DIRTY)
 
 # Architectures supported: amd64, arm, arm64 and ppc64le
 ARCH ?= amd64
@@ -56,8 +63,8 @@ all-push: $(addprefix sub-push-,$(ALL_ARCH))
 build: bin/$(BIN)-$(ARCH)
 
 bin/$(BIN)-$(ARCH): FORCE
-	mkdir -p bin/$(ARCH)
-	mkdir -p .go/src/$(GO_PKG) .go/pkg .go/bin .go/std/$(ARCH)
+	@mkdir -p bin/$(ARCH)
+	@mkdir -p .go/src/$(GO_PKG) .go/pkg .go/bin .go/std/$(ARCH)
 	docker run                                                             \
 	    -u $$(id -u):$$(id -g)                                             \
 	    -v $$(pwd)/.go:/go                                                 \
@@ -70,19 +77,22 @@ bin/$(BIN)-$(ARCH): FORCE
 	        CGO_ENABLED=0                                                  \
 	        go install                                                     \
 	        -installsuffix static                                          \
-	        -ldflags '-X main.VERSION=$(VERSION)'                          \
+	        -ldflags '-X k8s.io/spartakus/pkg/version.VERSION=$(VERSION)'  \
 	        ./...                                                          \
 	    "
 
 container: .container-$(ARCH)
 .container-$(ARCH): bin/$(BIN)-$(ARCH)
 	docker build -t $(IMAGE):$(VERSION) --build-arg ARCH=$(ARCH) .
-	touch $@
+	@touch $@
 
 push: .push-$(ARCH)
 .push-$(ARCH): .container-$(ARCH)
 	gcloud docker push $(IMAGE):$(VERSION)
-	touch $@
+	@touch $@
+
+version:
+	@echo $(VERSION)
 
 clean:
 	rm -rf .container-* .push-* .go bin

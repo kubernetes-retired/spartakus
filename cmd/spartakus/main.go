@@ -7,10 +7,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"k8s.io/spartakus/pkg/glogr"
 	"k8s.io/spartakus/pkg/logr"
-)
-
-var (
-	VERSION = "UNKNOWN"
+	"k8s.io/spartakus/pkg/version"
 )
 
 func usage() {
@@ -56,7 +53,7 @@ func main() {
 	}
 
 	if *flPrintVersion {
-		fmt.Printf("spartakus-collector version %s\n", VERSION)
+		fmt.Printf("spartakus-collector version %s\n", version.VERSION)
 		os.Exit(0)
 	}
 

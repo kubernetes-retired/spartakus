@@ -21,7 +21,7 @@ type serverVersioner interface {
 
 func nodeFromKubernetesAPINode(kn kapi.Node) report.Node {
 	n := report.Node{
-		ID:                      hashOf(kn.Name), //FIXME: use machineID if present
+		ID:                      getID(kn),
 		OSImage:                 strPtr(kn.Status.NodeInfo.OSImage),
 		KernelVersion:           strPtr(kn.Status.NodeInfo.KernelVersion),
 		ContainerRuntimeVersion: strPtr(kn.Status.NodeInfo.ContainerRuntimeVersion),
@@ -34,6 +34,14 @@ func nodeFromKubernetesAPINode(kn kapi.Node) report.Node {
 		})
 	}
 	return n
+}
+
+func getID(kn kapi.Node) string {
+	// We don't want to report the node's Name - that is PII.  The MachineID is
+	// apparently not always populated and SystemUUID is ill-defined.  Let's
+	// just hash them all together.  It should be stable, and this reduces risk
+	// of PII leakage.
+	return hashOf(kn.Name + kn.Status.NodeInfo.MachineID + kn.Status.NodeInfor.SystemUUID),
 }
 
 func hashOf(str string) string {
