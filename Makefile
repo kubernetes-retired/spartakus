@@ -70,6 +70,7 @@ bin/$(ARCH)/$(BIN): FORCE
 	@mkdir -p bin/$(ARCH)
 	@mkdir -p .go/src/$(GO_PKG) .go/pkg .go/bin .go/std/$(ARCH)
 	@docker run                                                            \
+	    -ti                                                                \
 	    -u $$(id -u):$$(id -g)                                             \
 	    -v $$(pwd)/.go:/go                                                 \
 	    -v $$(pwd):/go/src/$(GO_PKG)                                       \
