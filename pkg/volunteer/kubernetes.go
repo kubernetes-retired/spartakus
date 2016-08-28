@@ -41,7 +41,7 @@ func getID(kn kapi.Node) string {
 	// apparently not always populated and SystemUUID is ill-defined.  Let's
 	// just hash them all together.  It should be stable, and this reduces risk
 	// of PII leakage.
-	return hashOf(kn.Name + kn.Status.NodeInfo.MachineID + kn.Status.NodeInfor.SystemUUID),
+	return hashOf(kn.Name + kn.Status.NodeInfo.MachineID + kn.Status.NodeInfo.SystemUUID)
 }
 
 func hashOf(str string) string {

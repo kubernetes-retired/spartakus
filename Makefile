@@ -39,8 +39,7 @@ VERSION := $(VERSION)$(DIRTY)
 ARCH ?= amd64
 
 # TODO: get a base image for non-x86 archs
-#       arm arm64 ppc64le
-ALL_ARCH = amd64
+ALL_ARCH = amd64 arm arm64 ppc64le
 
 BUILD_IMAGE ?= golang:1.7.0-alpine
 
@@ -48,24 +47,29 @@ BUILD_IMAGE ?= golang:1.7.0-alpine
 # If you want to build AND push all containers, see the 'all-push' rule.
 all: all-build
 
-sub-container-%:
-	$(MAKE) ARCH=$* container
+build-%:
+	@$(MAKE) --no-print-directory ARCH=$* build
 
-sub-push-%:
-	$(MAKE) ARCH=$* push
+container-%:
+	@$(MAKE) --no-print-directory ARCH=$* container
 
-all-build: $(addprefix bin/$(BIN)-,$(ALL_ARCH))
+push-%:
+	@$(MAKE) --no-print-directory ARCH=$* push
 
-all-container: $(addprefix sub-container-,$(ALL_ARCH))
+#all-build: $(foreach arch, $(ALL_ARCH), bin/$(arch)/$(BIN))
+all-build: $(addprefix build-, $(ALL_ARCH))
 
-all-push: $(addprefix sub-push-,$(ALL_ARCH))
+all-container: $(addprefix container-, $(ALL_ARCH))
 
-build: bin/$(BIN)-$(ARCH)
+all-push: $(addprefix push-, $(ALL_ARCH))
 
-bin/$(BIN)-$(ARCH): FORCE
+build: bin/$(ARCH)/$(BIN)
+
+bin/$(ARCH)/$(BIN): FORCE
+	@echo "building: $@"
 	@mkdir -p bin/$(ARCH)
 	@mkdir -p .go/src/$(GO_PKG) .go/pkg .go/bin .go/std/$(ARCH)
-	docker run                                                             \
+	@docker run                                                            \
 	    -u $$(id -u):$$(id -g)                                             \
 	    -v $$(pwd)/.go:/go                                                 \
 	    -v $$(pwd):/go/src/$(GO_PKG)                                       \
@@ -75,6 +79,7 @@ bin/$(BIN)-$(ARCH): FORCE
 	    /bin/sh -c "                                                       \
 	        cd /go/src/$(GO_PKG) &&                                        \
 	        CGO_ENABLED=0                                                  \
+	        GOARCH=$(ARCH)                                                 \
 	        go install                                                     \
 	        -installsuffix static                                          \
 	        -ldflags '-X k8s.io/spartakus/pkg/version.VERSION=$(VERSION)'  \
@@ -82,13 +87,15 @@ bin/$(BIN)-$(ARCH): FORCE
 	    "
 
 container: .container-$(ARCH)
-.container-$(ARCH): bin/$(BIN)-$(ARCH)
-	docker build -t $(IMAGE):$(VERSION) --build-arg ARCH=$(ARCH) .
+.container-$(ARCH): bin/$(ARCH)/$(BIN)
+	@echo "container: $(IMAGE):$(VERSION)"
+	@docker build -t $(IMAGE):$(VERSION) --build-arg ARCH=$(ARCH) .
 	@touch $@
 
 push: .push-$(ARCH)
 .push-$(ARCH): .container-$(ARCH)
-	gcloud docker push $(IMAGE):$(VERSION)
+	@echo "push: $(IMAGE):$(VERSION)"
+	@gcloud docker push $(IMAGE):$(VERSION)
 	@touch $@
 
 version:
