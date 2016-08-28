@@ -4,10 +4,13 @@
 //
 // This design derives from Dave Cheney's blog:
 //     http://dave.cheney.net/2015/11/05/lets-talk-about-logging
+//
+// This is a BETA grade API.  Until there is a significant 2nd implementation,
+// I don't really know how it will change.
 package logr
 
-// TODO: structured logging a la uber-go/zap
-// TODO: consider other bits of functionality like Flush(), InfoDepth(), OutputStats
+// TODO: consider structured logging, a la uber-go/zap
+// TODO: consider other bits of glog functionality like Flush, InfoDepth, OutputStats
 
 // InfoLogger represents the ability to log non-error messages.
 type InfoLogger interface {
@@ -36,7 +39,8 @@ type Logger interface {
 	// Errorf logs a formatted error message.
 	Errorf(format string, args ...interface{})
 
-	// V returns an InfoLogger value for a specific verbosity level.
+	// V returns an InfoLogger value for a specific verbosity level.  A higher
+	// verbosity level means a log message is less important.
 	V(level int) InfoLogger
 
 	// NewWithPrefix returns a Logger which prefixes all messages.

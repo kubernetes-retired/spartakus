@@ -11,8 +11,7 @@ import (
 	"github.com/coreos/pkg/health"
 	"github.com/gorilla/handlers"
 	"github.com/julienschmidt/httprouter"
-
-	"k8s.io/spartakus/pkg/logr"
+	"github.com/thockin/logr"
 	"k8s.io/spartakus/pkg/report"
 	"k8s.io/spartakus/pkg/version"
 )

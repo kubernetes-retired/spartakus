@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/pflag"
+	"github.com/thockin/logr"
 	"k8s.io/spartakus/pkg/collector"
 	"k8s.io/spartakus/pkg/database"
-	"k8s.io/spartakus/pkg/logr"
 )
 
 var collectorConfig = struct {
@@ -18,7 +18,7 @@ var collectorConfig = struct {
 
 type collectorSubProgram struct{}
 
-func (_ collectorSubProgram) AddFlags(fs *flag.FlagSet) {
+func (_ collectorSubProgram) AddFlags(fs *pflag.FlagSet) {
 	fs.IntVar(&collectorConfig.port, "port", 8080, "Port on which to listen")
 	fs.StringVar(&collectorConfig.database, "database", "stdout", "Where to store records; use --print-databases for a list of options")
 	fs.BoolVar(&collectorConfig.printDatabases, "print-databases", false, "Print database options and exit")

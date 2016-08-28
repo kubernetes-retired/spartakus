@@ -7,12 +7,12 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/prometheus/common/log"
+	"github.com/thockin/logr"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	bigquery "google.golang.org/api/bigquery/v2"
 	"k8s.io/spartakus/pkg/collector"
-	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
 )
 

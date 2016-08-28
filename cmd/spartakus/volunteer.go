@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/pflag"
+	"github.com/thockin/logr"
 	"k8s.io/spartakus/pkg/database"
-	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/volunteer"
 )
 
@@ -20,7 +20,7 @@ var volunteerConfig = struct {
 
 type volunteerSubProgram struct{}
 
-func (_ volunteerSubProgram) AddFlags(fs *flag.FlagSet) {
+func (_ volunteerSubProgram) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&volunteerConfig.clusterID, "cluster-id", "", "Your cluster ID")
 	fs.DurationVar(&volunteerConfig.period, "period", 24*time.Hour, "How often to send reports")
 	fs.StringVar(&volunteerConfig.database, "database",

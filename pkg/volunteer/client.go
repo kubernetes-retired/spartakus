@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/thockin/logr"
 	kclient "k8s.io/client-go/1.4/kubernetes"
 	krest "k8s.io/client-go/1.4/rest"
 	"k8s.io/spartakus/pkg/database"
-	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
 	"k8s.io/spartakus/pkg/version"
 )

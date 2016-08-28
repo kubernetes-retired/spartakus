@@ -5,7 +5,7 @@ import (
 	"os"
 	"sort"
 
-	"k8s.io/spartakus/pkg/logr"
+	"github.com/thockin/logr"
 )
 
 // A database plugin is an abstract way to allocate a Database.

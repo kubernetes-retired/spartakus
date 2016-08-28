@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"k8s.io/spartakus/pkg/logr"
+	"github.com/thockin/logr"
 	"k8s.io/spartakus/pkg/report"
 )
 

@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/thockin/logr"
 	"k8s.io/spartakus/pkg/collector"
-	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
 )
 

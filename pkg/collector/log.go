@@ -1,7 +1,7 @@
 package collector
 
 import (
-	"k8s.io/spartakus/pkg/logr"
+	"github.com/thockin/logr"
 )
 
 type logWriter struct {
