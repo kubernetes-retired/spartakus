@@ -4,10 +4,11 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 
-	kapi "k8s.io/kubernetes/pkg/api"
-	kclient "k8s.io/kubernetes/pkg/client/unversioned"
-	kfields "k8s.io/kubernetes/pkg/fields"
-	klabels "k8s.io/kubernetes/pkg/labels"
+	kclient "k8s.io/client-go/1.4/kubernetes"
+	kapi "k8s.io/client-go/1.4/pkg/api"
+	kv1 "k8s.io/client-go/1.4/pkg/api/v1"
+	kfields "k8s.io/client-go/1.4/pkg/fields"
+	klabels "k8s.io/client-go/1.4/pkg/labels"
 	"k8s.io/spartakus/pkg/report"
 )
 
@@ -19,7 +20,7 @@ type serverVersioner interface {
 	ServerVersion() (string, error)
 }
 
-func nodeFromKubernetesAPINode(kn kapi.Node) report.Node {
+func nodeFromKubernetesAPINode(kn kv1.Node) report.Node {
 	n := report.Node{
 		ID:                      getID(kn),
 		OSImage:                 strPtr(kn.Status.NodeInfo.OSImage),
@@ -36,7 +37,7 @@ func nodeFromKubernetesAPINode(kn kapi.Node) report.Node {
 	return n
 }
 
-func getID(kn kapi.Node) string {
+func getID(kn kv1.Node) string {
 	// We don't want to report the node's Name - that is PII.  The MachineID is
 	// apparently not always populated and SystemUUID is ill-defined.  Let's
 	// just hash them all together.  It should be stable, and this reduces risk
@@ -57,11 +58,11 @@ func strPtr(str string) *string {
 }
 
 type kubernetesClientWrapper struct {
-	client *kclient.Client
+	client *kclient.Clientset
 }
 
 func (k *kubernetesClientWrapper) ListNodes() ([]report.Node, error) {
-	knl, err := k.client.Nodes().List(kapi.ListOptions{
+	knl, err := k.client.Core().Nodes().List(kapi.ListOptions{
 		LabelSelector: klabels.Everything(),
 		FieldSelector: kfields.Everything(),
 	})

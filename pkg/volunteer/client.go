@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	kclient "k8s.io/kubernetes/pkg/client/unversioned"
+	kclient "k8s.io/client-go/1.4/kubernetes"
+	krest "k8s.io/client-go/1.4/rest"
 	"k8s.io/spartakus/pkg/database"
 	"k8s.io/spartakus/pkg/logr"
 	"k8s.io/spartakus/pkg/report"
@@ -12,11 +13,15 @@ import (
 )
 
 func New(log logr.Logger, clusterID string, period time.Duration, db database.Database) (*volunteer, error) {
-	kc, err := kclient.NewInCluster()
+	kubeConfig, err := krest.InClusteonfig()
 	if err != nil {
 		return nil, err
 	}
-	kcw := &kubernetesClientWrapper{client: kc}
+	kubeClient, err := kclient.NewForConfig(kubeConfig)
+	if err != nil {
+		return nil, err
+	}
+	kcw := &kubernetesClientWrapper{client: kubeClient}
 
 	gen := volunteer{
 		log:             log,
