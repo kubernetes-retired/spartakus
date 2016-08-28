@@ -43,9 +43,10 @@ ALL_ARCH = amd64 arm arm64 ppc64le
 
 BUILD_IMAGE ?= golang:1.7.0-alpine
 
+# If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
 # If you want to build AND push all containers, see the 'all-push' rule.
-all: all-build
+all: build
 
 build-%:
 	@$(MAKE) --no-print-directory ARCH=$* build
@@ -56,7 +57,6 @@ container-%:
 push-%:
 	@$(MAKE) --no-print-directory ARCH=$* push
 
-#all-build: $(foreach arch, $(ALL_ARCH), bin/$(arch)/$(BIN))
 all-build: $(addprefix build-, $(ALL_ARCH))
 
 all-container: $(addprefix container-, $(ALL_ARCH))
