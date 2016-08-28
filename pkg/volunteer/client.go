@@ -59,6 +59,9 @@ func (v *volunteer) Run() error {
 		}
 
 		v.log.V(0).Infof("report successfully sent to collector")
+		if v.period == 0 {
+			return nil
+		}
 		v.log.V(0).Infof("next attempt in %v", v.period)
 		<-time.After(v.period)
 	}
