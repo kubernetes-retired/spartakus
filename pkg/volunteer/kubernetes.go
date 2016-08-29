@@ -8,10 +8,7 @@ import (
 	kclient "k8s.io/client-go/1.4/kubernetes"
 	kapi "k8s.io/client-go/1.4/pkg/api"
 	kv1 "k8s.io/client-go/1.4/pkg/api/v1"
-	kfields "k8s.io/client-go/1.4/pkg/fields"
-	klabels "k8s.io/client-go/1.4/pkg/labels"
 	krest "k8s.io/client-go/1.4/rest"
-
 	"k8s.io/spartakus/pkg/report"
 )
 
@@ -89,10 +86,7 @@ type kubeClientWrapper struct {
 }
 
 func (k *kubeClientWrapper) ListNodes() ([]report.Node, error) {
-	knl, err := k.client.Core().Nodes().List(kapi.ListOptions{
-		LabelSelector: klabels.Everything(),
-		FieldSelector: kfields.Everything(),
-	})
+	knl, err := k.client.Core().Nodes().List(kapi.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
