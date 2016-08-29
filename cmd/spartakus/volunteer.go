@@ -24,7 +24,7 @@ func (_ volunteerSubProgram) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&volunteerConfig.clusterID, "cluster-id", "", "Your cluster ID")
 	fs.DurationVar(&volunteerConfig.period, "period", 24*time.Hour, "How often to send reports; set to 0 for one-shot mode")
 	fs.StringVar(&volunteerConfig.database, "database",
-		"http://spartakus.k8s.io", "Send reports to this database; use --print-databases for a list of options") //FIXME: default to SSL
+		"https://spartakus.k8s.io", "Send reports to this database; use --print-databases for a list of options")
 	fs.BoolVar(&volunteerConfig.printDatabases, "print-databases", false, "Print database options and exit")
 }
 
