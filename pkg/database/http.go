@@ -17,6 +17,7 @@ func init() {
 	//FIXME: need https
 }
 
+// This plugin POSTS a JSON-encoded report.Record to a URL at /api/v1 path.
 type httpPlugin struct{}
 
 func (plug httpPlugin) Attempt(log logr.Logger, dbspec string) (bool, Database, error) {
