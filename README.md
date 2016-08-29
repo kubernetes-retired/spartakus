@@ -1,64 +1,131 @@
-# spartakus-collector
+# Spartakus
+
+This project aims to collect information about Kubernetes clusters.  This
+information will help the Kubernetes development team to understand what people
+are doing with it, and to make it a better product.
+
+THIS DOES NOT REPORT ANY PERSONAL INFORMATION.  Anything that might be
+identifying, including things like IP addresses, container images, and object
+names are anonymized.  We take this very seriously.  If you think something we
+are collecting might be considered personal information, PLEASE let us know!
+
+This is a 100% voluntary effort.  It is not baked into Kubernetes in any way,
+shape, or form.  If you don't want to run it, you don't have to.  If you want
+to run your own server and collect data yourself, you can do that, too.  If you
+want to report less information, the source is here and we're open to feature
+requests to better tailor the reports to what people are comfortable with.
+
+## Overview
 
 This project encompasses two things:
 
-1. collector: an HTTP API capable of receiving reports from clusters and storing them in Postgres
-2. volunteer: a tool that periodically generates reports using the v1 Kubernetes API and publishes it to the collector
+1. collector: an HTTP API which receives reports from volunteers and stores
+   them in Google Bigquery
+2. volunteer: a tool that periodically generates reports using the Kubernetes
+   API and publishes it to the collector
 
-An example of a report payload follows:
+## What is in a report?
 
-```
+An example of a report payload:
+
+```json
 {
-  "metadata": {
-    "timestamp": "1437174715",
-  },
-  "payload": {
-    "clusterID":"612e0f99-1912-4647-831d-ba4c3d918b66",
-    "nodes":[
-      {
-        "status":{
-          "capacity":{
-            "cpu":"1",
-            "memory":"505020Ki",
-            "pods":"40"
-          },
-          "nodeInfo":{
-            "osImage":"CoreOS 738.1.0",
-            "kernelVersion":"4.0.7-coreos-r2",
-            "kubeletVersion":"v1.0.3",
-            "containerRuntimeVersion":"docker://1.6.2"
-          }
+    "version": "v1.0.0",
+    "timestamp": "867530909031976",
+    "clusterID": "2f9c93d3-156c-47aa-8802-578ffca9b50e",
+    "masterVersion": "v1.3.5",
+    "nodes": [
+        {
+            "id": "c8863d09ecc5be8d9791f72acd275fc2",
+            "operatingSystem": "linux",
+            "osImage": "Debian GNU/Linux 7 (wheezy)",
+            "kernelVersion": "3.16.0-4-amd64",
+            "architecture": "amd64",
+            "containerRuntimeVersion": "docker://1.11.2",
+            "kubeletVersion": "v1.3.2",
+            "capacity": [
+                {
+                    "resource": "alpha.kubernetes.io/nvidia-gpu",
+                    "value": "0"
+                },
+                {
+                    "resource": "cpu",
+                    "value": "4"
+                },
+                {
+                    "resource": "memory",
+                    "value": "15437428Ki"
+                },
+                {
+                    "resource": "pods",
+                    "value": "110"
+                }
+            ]
+        },
+        {
+            "id": "5b919a15947b0680277acddf68d4b7aa",
+            "operatingSystem": "linux",
+            "osImage": "Debian GNU/Linux 7 (wheezy)",
+            "kernelVersion": "3.16.0-4-amd64",
+            "architecture": "amd64",
+            "containerRuntimeVersion": "docker://1.11.2",
+            "kubeletVersion": "v1.3.2",
+            "capacity": [
+                {
+                    "resource": "alpha.kubernetes.io/nvidia-gpu",
+                    "value": "0"
+                },
+                {
+                    "resource": "cpu",
+                    "value": "4"
+                },
+                {
+                    "resource": "memory",
+                    "value": "15437428Ki"
+                },
+                {
+                    "resource": "pods",
+                    "value": "110"
+                }
+            ]
         }
-      }
     ]
-  }
 }
 ```
 
-Note the `timestamp` metadata field - this is populated by the volunteer (but is not required).
-The collector will add more fields to the record metadata when it is received:
+### Future work
 
-- `received_at`: unix timestamp at which the record was received (i.e. "1437174812")
-- `received_from`: `<host>[:port]` from which the record was received (i.e. 192.0.2.145)
+We'd like to add more information to reports, but we're starting small.
+Anything we add will follow the same strict privacy rules outlined above.  Some
+examples of things we would consider adding:
+   * How many Namespaces exist
+   * A histogram of how many Pods, Services, Deployments, etc. exist
+     per-Namespace
+   * Average lifetime of Namespaces, Pods, Services, etc.
 
-## build & test
+# How do I run it?
 
-Simply run `./build` or `./test`.
+The simplest way is to use `kubectl run`.
 
-Alternatively, run `./go-docker ./build` or `./go-docker ./test` to build a golang container and execute golang commands therein.
+```
+kubectl run spartakus \
+    --image=gcr.io/google_containers/spartakus-amd64:v1.0.0 \
+    -- \
+    volunteer --cluster-id=$(uuidgen -r)
+```
 
-## release process
+This will generate a `Deployment` called "spartakus" in your "default"
+`Namespace`, which sends a report once every 24 hours.  It will report a random
+UUID as the cluster ID.  If you ever need to stop this deployment and re-run
+it, the UUID will be different.  If you want to generate a more durable UUID by
+hand, that's fine too.
 
-This project is built and released via [jenkins.coreos.systems](https://jenkins.coreos.systems/job/spartakus-collector).
-Jenkins builds are triggered manually for the time being.
+If you want to save the YAML that this produces, you can simply run:
 
-### package & publish
+```
+kubectl get deployment spartakus -o yaml
+```
 
-Jenkins uses the `package` and `publish` scripts to automate the building and pushing of docker images containing the volunteer and collector.
-Configure these scripts with `COLLECTOR_DOCKER_REPO`, `GENERATOR_DOCKER_REPO` and `DOCKER_TAG` environment variables before running them.
-The user is expected to pre-authenticate the local docker client with access to the necessary repositories.
+## Development
 
-## deploy
-
-See the Kubernetes manifest in contrib/ for examples of how to deploy the collector and volunteer.
-Make sure that you provide the appropriate docker secrets!
+Simply run `make` or `make test`.  The build is done through Docker.
