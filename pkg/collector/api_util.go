@@ -5,24 +5,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/coreos/pkg/httputil"
 	"github.com/julienschmidt/httprouter"
-	"google.golang.org/api/googleapi"
 )
 
-// WriteError builds an errorResponse entity from the given arguments,
-// serializing the object into the provided http.ResponseWriter
-func WriteError(w http.ResponseWriter, code int, err error) error {
-	resp := &errorResponse{Error: WrapError(code, err)}
-	return httputil.WriteJSONResponse(w, code, resp)
-}
-
-// ContentTypeMiddleware wraps and returns a httprouter.Handle, validating the request
+// contentTypeMiddleware wraps and returns a httprouter.Handle, validating the request
 // content type is compatible with the contentTypes list.
 // It writes a HTTP 415 error if that fails.
 //
 // Only PUT, POST, and PATCH requests are considered.
-func ContentTypeMiddleware(handle httprouter.Handle, contentTypes ...string) httprouter.Handle {
+func contentTypeMiddleware(handle httprouter.Handle, contentTypes ...string) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		if !(r.Method == "PUT" || r.Method == "POST" || r.Method == "PATCH") {
 			handle(w, r, p)
@@ -50,15 +41,13 @@ func isContentType(h http.Header, contentType string) bool {
 	return ct == contentType
 }
 
-// errorResponse is a fork of "google.golang.org/api/googleapi".errorReply
-type errorResponse struct {
-	Error *googleapi.Error `json:"error"`
-}
+// writeError writes an error value.
+func writeError(w http.ResponseWriter, code int, err error) error {
+	w.WriteHeader(code)
 
-func WrapError(code int, err error) *googleapi.Error {
-	newError := &googleapi.Error{Code: code}
+	_, err = w.Write([]byte("Error: " + err.Error()))
 	if err != nil {
-		newError.Message = err.Error()
+		return err
 	}
-	return newError
+	return nil
 }

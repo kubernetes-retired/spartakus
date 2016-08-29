@@ -12,7 +12,6 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	bigquery "google.golang.org/api/bigquery/v2"
-	"k8s.io/spartakus/pkg/collector"
 	"k8s.io/spartakus/pkg/report"
 )
 
@@ -56,7 +55,7 @@ func parseBigquerySpec(dbspec string) (bool, string, string, string, error) {
 	return true, subs[0], subs[1], subs[2], nil
 }
 
-func newBigqueryDatabase(log logr.Logger, project, dataset, table string) (collector.Database, error) {
+func newBigqueryDatabase(log logr.Logger, project, dataset, table string) (Database, error) {
 	ctx := context.Background()
 
 	// This assumes that:

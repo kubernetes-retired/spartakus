@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/thockin/logr"
-	"k8s.io/spartakus/pkg/collector"
 	"k8s.io/spartakus/pkg/report"
 )
 
@@ -37,9 +36,9 @@ func (plug httpPlugin) ExampleSpec() string {
 	return "http://spartakus.example.com"
 }
 
-var urlPath = "/api/v1/stats"
+var urlPath = "/api/v1"
 
-func newHTTPDatabase(c *http.Client, u url.URL) (collector.Database, error) {
+func newHTTPDatabase(c *http.Client, u url.URL) (Database, error) {
 	p, err := u.Parse(urlPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to prepare API URL: %v", err)
