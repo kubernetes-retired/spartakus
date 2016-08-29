@@ -26,16 +26,6 @@
 			"Rev": "31b736133b98f26d5e078ec9eb591666edfd091f"
 		},
 		{
-			"ImportPath": "github.com/coreos/pkg/health",
-			"Comment": "v2",
-			"Rev": "7f080b6c11ac2d2347c3cd7521e810207ea1a041"
-		},
-		{
-			"ImportPath": "github.com/coreos/pkg/httputil",
-			"Comment": "v2",
-			"Rev": "7f080b6c11ac2d2347c3cd7521e810207ea1a041"
-		},
-		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
 			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
