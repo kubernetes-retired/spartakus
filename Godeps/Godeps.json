@@ -94,6 +94,14 @@
 			"Rev": "6aacfd5ab513e34f7e64ea9627ab9670371b34e7"
 		},
 		{
+			"ImportPath": "github.com/kylelemons/godebug/diff",
+			"Rev": "eadb3ce320cbab8393bea5ca17bebac3f78a021b"
+		},
+		{
+			"ImportPath": "github.com/kylelemons/godebug/pretty",
+			"Rev": "eadb3ce320cbab8393bea5ca17bebac3f78a021b"
+		},
+		{
 			"ImportPath": "github.com/matttproud/golang_protobuf_extensions/pbutil",
 			"Rev": "fc2b8d3a73c4867e51861bbdd5ae3c1f0869dd6a"
 		},
@@ -137,7 +145,11 @@
 		},
 		{
 			"ImportPath": "github.com/thockin/logr",
-			"Rev": "103d90809f342ce8b186c0bc903a34bc1c8007be"
+			"Rev": "2ca97858d8cdf13ec160a06726513e78a28ee22b"
+		},
+		{
+			"ImportPath": "github.com/thockin/logr/testing",
+			"Rev": "2ca97858d8cdf13ec160a06726513e78a28ee22b"
 		},
 		{
 			"ImportPath": "github.com/ugorji/go/codec",

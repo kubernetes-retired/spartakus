@@ -3,12 +3,15 @@ package volunteer
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"sort"
 
 	kclient "k8s.io/client-go/1.4/kubernetes"
 	kapi "k8s.io/client-go/1.4/pkg/api"
 	kv1 "k8s.io/client-go/1.4/pkg/api/v1"
 	kfields "k8s.io/client-go/1.4/pkg/fields"
 	klabels "k8s.io/client-go/1.4/pkg/labels"
+	krest "k8s.io/client-go/1.4/rest"
+
 	"k8s.io/spartakus/pkg/report"
 )
 
@@ -20,15 +23,24 @@ type serverVersioner interface {
 	ServerVersion() (string, error)
 }
 
-func nodeFromKubernetesAPINode(kn kv1.Node) report.Node {
+func nodeFromKubeNode(kn *kv1.Node) report.Node {
 	n := report.Node{
 		ID:                      getID(kn),
+		OperatingSystem:         strPtr(kn.Status.NodeInfo.OperatingSystem),
 		OSImage:                 strPtr(kn.Status.NodeInfo.OSImage),
 		KernelVersion:           strPtr(kn.Status.NodeInfo.KernelVersion),
+		Architecture:            strPtr(kn.Status.NodeInfo.Architecture),
 		ContainerRuntimeVersion: strPtr(kn.Status.NodeInfo.ContainerRuntimeVersion),
 		KubeletVersion:          strPtr(kn.Status.NodeInfo.KubeletVersion),
 	}
-	for k, v := range kn.Status.Capacity {
+	// We want to iterate the resources in a deterministic order.
+	keys := []string{}
+	for k, _ := range kn.Status.Capacity {
+		keys = append(keys, string(k))
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		v := kn.Status.Capacity[kv1.ResourceName(k)]
 		n.Capacity = append(n.Capacity, report.Resource{
 			Resource: string(k),
 			Value:    v.String(),
@@ -37,7 +49,7 @@ func nodeFromKubernetesAPINode(kn kv1.Node) report.Node {
 	return n
 }
 
-func getID(kn kv1.Node) string {
+func getID(kn *kv1.Node) string {
 	// We don't want to report the node's Name - that is PII.  The MachineID is
 	// apparently not always populated and SystemUUID is ill-defined.  Let's
 	// just hash them all together.  It should be stable, and this reduces risk
@@ -52,16 +64,31 @@ func hashOf(str string) string {
 }
 
 func strPtr(str string) *string {
+	if str == "" {
+		return nil
+	}
 	p := new(string)
 	*p = str
 	return p
 }
 
-type kubernetesClientWrapper struct {
+func newKubeClientWrapper() (*kubeClientWrapper, error) {
+	kubeConfig, err := krest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	kubeClient, err := kclient.NewForConfig(kubeConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &kubeClientWrapper{client: kubeClient}, nil
+}
+
+type kubeClientWrapper struct {
 	client *kclient.Clientset
 }
 
-func (k *kubernetesClientWrapper) ListNodes() ([]report.Node, error) {
+func (k *kubeClientWrapper) ListNodes() ([]report.Node, error) {
 	knl, err := k.client.Core().Nodes().List(kapi.ListOptions{
 		LabelSelector: klabels.Everything(),
 		FieldSelector: kfields.Everything(),
@@ -70,16 +97,17 @@ func (k *kubernetesClientWrapper) ListNodes() ([]report.Node, error) {
 		return nil, err
 	}
 	nodes := make([]report.Node, len(knl.Items))
-	for i, kn := range knl.Items {
-		nodes[i] = nodeFromKubernetesAPINode(kn)
+	for i := range knl.Items {
+		kn := &knl.Items[i]
+		nodes[i] = nodeFromKubeNode(kn)
 	}
 	return nodes, nil
 }
 
-func (k *kubernetesClientWrapper) ServerVersion() (string, error) {
-	i, err := k.client.Discovery().ServerVersion()
+func (k *kubeClientWrapper) ServerVersion() (string, error) {
+	info, err := k.client.Discovery().ServerVersion()
 	if err != nil {
 		return "", err
 	}
-	return i.String(), nil
+	return info.String(), nil
 }

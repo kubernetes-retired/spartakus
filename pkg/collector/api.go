@@ -63,7 +63,7 @@ func (s *APIServer) storeRecordHandler() httprouter.Handle {
 	handle := func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, fmt.Errorf("failed to read record: %v, err"))
+			writeError(w, http.StatusInternalServerError, fmt.Errorf("failed to read record: %v, err", err))
 			return
 		}
 

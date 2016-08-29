@@ -1,38 +1,38 @@
 package volunteer
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/thockin/logr"
-	kclient "k8s.io/client-go/1.4/kubernetes"
-	krest "k8s.io/client-go/1.4/rest"
 	"k8s.io/spartakus/pkg/database"
 	"k8s.io/spartakus/pkg/report"
 	"k8s.io/spartakus/pkg/version"
 )
 
 func New(log logr.Logger, clusterID string, period time.Duration, db database.Database) (*volunteer, error) {
-	kubeConfig, err := krest.InClusterConfig()
+	kcw, err := newKubeClientWrapper()
 	if err != nil {
 		return nil, err
 	}
-	kubeClient, err := kclient.NewForConfig(kubeConfig)
-	if err != nil {
-		return nil, err
-	}
-	kcw := &kubernetesClientWrapper{client: kubeClient}
+	return newVolunteer(log, clusterID, period, db, kcw, kcw), nil
+}
 
-	gen := volunteer{
+func newVolunteer(
+	log logr.Logger,
+	clusterID string,
+	period time.Duration,
+	db database.Database,
+	nodeLister nodeLister,
+	serverVersioner serverVersioner) *volunteer {
+
+	return &volunteer{
 		log:             log,
 		clusterID:       clusterID,
 		period:          period,
 		database:        db,
-		nodeLister:      kcw,
-		serverVersioner: kcw,
+		nodeLister:      nodeLister,
+		serverVersioner: serverVersioner,
 	}
-
-	return &gen, nil
 }
 
 type volunteer struct {
@@ -65,7 +65,7 @@ func (v *volunteer) Run() error {
 		v.log.V(0).Infof("next attempt in %v", v.period)
 		<-time.After(v.period)
 	}
-	return fmt.Errorf("unexpected termination")
+	// This can never be reached, and `go vet` complains if code is here.
 }
 
 func (v *volunteer) generateRecord() (report.Record, error) {

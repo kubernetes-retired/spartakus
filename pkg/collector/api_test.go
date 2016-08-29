@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	logrtest "github.com/thockin/logr/testing"
+	"k8s.io/spartakus/pkg/database"
 	"k8s.io/spartakus/pkg/report"
 )
 
@@ -36,18 +38,18 @@ func (rt *HandlerRoundTripper) RoundTrip(r *http.Request) (*http.Response, error
 	return &resp, nil
 }
 
-type memRecordRepo struct {
+type memDatabase struct {
 	Records []report.Record
 }
 
-func (d *memRecordRepo) Store(r report.Record) error {
+func (d *memDatabase) Store(r report.Record) error {
 	d.Records = append(d.Records, r)
 	return nil
 }
 
 type testServer struct {
-	RecordRepo report.RecordRepo
-	srv        *APIServer
+	Database database.Database
+	srv      *APIServer
 }
 
 func (ts *testServer) URL(p string) string {
@@ -59,37 +61,38 @@ func (ts *testServer) URL(p string) string {
 	return u.String()
 }
 
-func (ts *testServer) Server() *APIServer {
+func (ts *testServer) Server(t *testing.T) *APIServer {
 	if ts.srv == nil {
 		ts.srv = &APIServer{
-			RecordRepo: ts.RecordRepo,
+			Log:      logrtest.TestLogger{t},
+			Database: ts.Database,
 		}
 	}
 	return ts.srv
 }
 
-func (ts *testServer) HTTPClient() *http.Client {
+func (ts *testServer) HTTPClient(t *testing.T) *http.Client {
 	return &http.Client{
 		Transport: &HandlerRoundTripper{
-			Handler: ts.Server().newHandler(),
+			Handler: ts.Server(t).newHandler(),
 		},
 	}
 }
 
-type errRecordRepo struct {
+type errDatabase struct {
 	err error
 }
 
-func (d *errRecordRepo) Store(report.Record) error {
+func (d *errDatabase) Store(report.Record) error {
 	return d.err
 }
 
 func TestRecordResourceStoreBadContentType(t *testing.T) {
-	repo := &memRecordRepo{}
-	srv := &testServer{RecordRepo: repo}
-	cli := srv.HTTPClient()
+	db := &memDatabase{}
+	srv := &testServer{Database: db}
+	cli := srv.HTTPClient(t)
 
-	req, err := http.NewRequest("POST", srv.URL(StatsEndpoint), strings.NewReader(minimumRecordJSON))
+	req, err := http.NewRequest("POST", srv.URL(CollectorEndpoint), strings.NewReader(minimumRecordJSON))
 	if err != nil {
 		t.Fatalf("unable to create HTTP request: %v", err)
 	}
@@ -106,11 +109,11 @@ func TestRecordResourceStoreBadContentType(t *testing.T) {
 }
 
 func TestRecordResourceStoreInternalError(t *testing.T) {
-	repo := &errRecordRepo{err: errors.New("fail!")}
-	srv := &testServer{RecordRepo: repo}
-	cli := srv.HTTPClient()
+	db := &errDatabase{err: errors.New("fail!")}
+	srv := &testServer{Database: db}
+	cli := srv.HTTPClient(t)
 
-	req, err := http.NewRequest("POST", srv.URL(StatsEndpoint), strings.NewReader(minimumRecordJSON))
+	req, err := http.NewRequest("POST", srv.URL(CollectorEndpoint), strings.NewReader(minimumRecordJSON))
 	if err != nil {
 		t.Fatalf("unable to create HTTP request: %v", err)
 	}
@@ -134,11 +137,11 @@ func TestRecordResourceStoreBadRecord(t *testing.T) {
 		`{`,
 	}
 	for i, tt := range tests {
-		repo := &memRecordRepo{}
-		srv := &testServer{RecordRepo: repo}
-		cli := srv.HTTPClient()
+		db := &memDatabase{}
+		srv := &testServer{Database: db}
+		cli := srv.HTTPClient(t)
 
-		req, err := http.NewRequest("POST", srv.URL(StatsEndpoint), strings.NewReader(tt))
+		req, err := http.NewRequest("POST", srv.URL(CollectorEndpoint), strings.NewReader(tt))
 		if err != nil {
 			t.Fatalf("case %d: unable to create HTTP request: %v", i, err)
 		}
@@ -158,11 +161,11 @@ func TestRecordResourceStoreBadRecord(t *testing.T) {
 }
 
 func TestRecordResoureStoreSuccess(t *testing.T) {
-	repo := &memRecordRepo{}
-	srv := &testServer{RecordRepo: repo}
-	cli := srv.HTTPClient()
+	db := &memDatabase{}
+	srv := &testServer{Database: db}
+	cli := srv.HTTPClient(t)
 
-	req, err := http.NewRequest("POST", srv.URL(StatsEndpoint), strings.NewReader(minimumRecordJSON))
+	req, err := http.NewRequest("POST", srv.URL(CollectorEndpoint), strings.NewReader(minimumRecordJSON))
 	if err != nil {
 		t.Fatalf("unable to create HTTP request: %v", err)
 	}

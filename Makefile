@@ -15,7 +15,7 @@
 .PHONY: all push container clean
 
 BIN = spartakus
-GO_PKG = k8s.io/spartakus
+PKG = k8s.io/spartakus
 
 REGISTRY ?= gcr.io/google_containers
 IMAGE = $(REGISTRY)/$(BIN)-$(ARCH)
@@ -41,7 +41,7 @@ ARCH ?= amd64
 # TODO: get a base image for non-x86 archs
 ALL_ARCH = amd64 arm arm64 ppc64le
 
-BUILD_IMAGE ?= golang:1.7.0-alpine
+BUILD_IMAGE ?= golang:1.7-alpine
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -68,23 +68,21 @@ build: bin/$(ARCH)/$(BIN)
 bin/$(ARCH)/$(BIN): FORCE
 	@echo "building: $@"
 	@mkdir -p bin/$(ARCH)
-	@mkdir -p .go/src/$(GO_PKG) .go/pkg .go/bin .go/std/$(ARCH)
+	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 	@docker run                                                            \
 	    -ti                                                                \
 	    -u $$(id -u):$$(id -g)                                             \
 	    -v $$(pwd)/.go:/go                                                 \
-	    -v $$(pwd):/go/src/$(GO_PKG)                                       \
+	    -v $$(pwd):/go/src/$(PKG)                                          \
 	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
 	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
+	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    /bin/sh -c "                                                       \
-	        cd /go/src/$(GO_PKG) &&                                        \
-	        CGO_ENABLED=0                                                  \
-	        GOARCH=$(ARCH)                                                 \
-	        go install                                                     \
-	        -installsuffix static                                          \
-	        -ldflags '-X k8s.io/spartakus/pkg/version.VERSION=$(VERSION)'  \
-	        ./...                                                          \
+	        ARCH=$(ARCH)                                                   \
+	        VERSION=$(VERSION)                                             \
+	        PKG=$(PKG)                                                     \
+	        ./build/build.sh                                               \
 	    "
 
 container: .container-$(ARCH)
@@ -101,6 +99,22 @@ push: .push-$(ARCH)
 
 version:
 	@echo $(VERSION)
+
+test:
+	@mkdir -p bin/$(ARCH)
+	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
+	@docker run                                                            \
+	    -ti                                                                \
+	    -u $$(id -u):$$(id -g)                                             \
+	    -v $$(pwd)/.go:/go                                                 \
+	    -v $$(pwd):/go/src/$(PKG)                                          \
+	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
+	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
+	    -w /go/src/$(PKG)                                                  \
+	    $(BUILD_IMAGE)                                                     \
+	    /bin/sh -c "                                                       \
+	        ./build/test.sh                                                \
+	    "
 
 clean:
 	rm -rf .container-* .push-* .go bin
