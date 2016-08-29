@@ -17,6 +17,7 @@ limitations under the License.
 package volunteer
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/thockin/logr"
@@ -63,18 +64,11 @@ type volunteer struct {
 func (v *volunteer) Run() error {
 	v.log.V(0).Infof("started volunteer")
 	for {
-		rec, err := v.generateRecord()
-		if err != nil {
-			v.log.Errorf("failed generating report: %v", err)
-			continue
+		if err := v.runOnce(); err != nil {
+			v.log.Errorf("%v", err)
+		} else {
+			v.log.V(0).Infof("report successfully sent")
 		}
-
-		if err = v.send(rec); err != nil {
-			v.log.Errorf("failed sending report: %v", err)
-			continue
-		}
-
-		v.log.V(0).Infof("report successfully sent to collector")
 		if v.period == 0 {
 			return nil
 		}
@@ -82,6 +76,19 @@ func (v *volunteer) Run() error {
 		<-time.After(v.period)
 	}
 	// This can never be reached, and `go vet` complains if code is here.
+}
+
+func (v *volunteer) runOnce() error {
+	rec, err := v.generateRecord()
+	if err != nil {
+		return fmt.Errorf("failed generating report: %v", err)
+	}
+
+	if err = v.send(rec); err != nil {
+		return fmt.Errorf("failed sending report: %v", err)
+	}
+
+	return nil
 }
 
 func (v *volunteer) generateRecord() (report.Record, error) {
