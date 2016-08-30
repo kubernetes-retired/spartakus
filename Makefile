@@ -65,10 +65,8 @@ all-push: $(addprefix push-, $(ALL_ARCH))
 
 build: bin/$(ARCH)/$(BIN)
 
-bin/$(ARCH)/$(BIN): FORCE
+bin/$(ARCH)/$(BIN): build-dirs
 	@echo "building: $@"
-	@mkdir -p bin/$(ARCH)
-	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 	@docker run                                                            \
 	    -ti                                                                \
 	    -u $$(id -u):$$(id -g)                                             \
@@ -89,20 +87,18 @@ container: .container-$(ARCH)
 .container-$(ARCH): bin/$(ARCH)/$(BIN) Dockerfile
 	@echo "container: $(IMAGE):$(VERSION)"
 	@docker build -t $(IMAGE):$(VERSION) --build-arg ARCH=$(ARCH) .
-	@touch $@
+	@echo $(IMAGE):$(VERSION) > $@
 
 push: .push-$(ARCH)
 .push-$(ARCH): .container-$(ARCH)
 	@echo "push: $(IMAGE):$(VERSION)"
 	@gcloud docker push $(IMAGE):$(VERSION)
-	@touch $@
+	@echo $(IMAGE):$(VERSION) > $@
 
 version:
 	@echo $(VERSION)
 
-test:
-	@mkdir -p bin/$(ARCH)
-	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
+test: build-dirs
 	@docker run                                                            \
 	    -ti                                                                \
 	    -u $$(id -u):$$(id -g)                                             \
@@ -116,7 +112,14 @@ test:
 	        ./build/test.sh                                                \
 	    "
 
-clean:
-	rm -rf .container-* .push-* .go bin
+build-dirs:
+	@mkdir -p bin/$(ARCH)
+	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 
-FORCE:
+clean: container-clean bin-clean
+
+container-clean:
+	rm -rf .container-* .push-*
+
+bin-clean:
+	rm -rf .go bin
