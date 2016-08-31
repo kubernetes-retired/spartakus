@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        run: spartakus-collector
+        app: spartakus-collector
     spec:
       terminationGracePeriodSeconds: 30
       volumes:
