@@ -65,10 +65,10 @@ func parseBigquerySpec(dbspec string) (bool, string, string, string, error) {
 		return false, "", "", "", nil
 	}
 	subs := bqre.FindStringSubmatch(dbspec)
-	if len(subs) != 3 {
+	if len(subs) != 4 {
 		return true, "", "", "", fmt.Errorf("invalid bigquery spec: %q", dbspec)
 	}
-	return true, subs[0], subs[1], subs[2], nil
+	return true, subs[1], subs[2], subs[3], nil
 }
 
 func newBigqueryDatabase(log logr.Logger, project, dataset, table string) (Database, error) {
