@@ -83,17 +83,23 @@ bin/$(ARCH)/$(BIN): build-dirs
 	        ./build/build.sh                                               \
 	    "
 
-container: .container-$(ARCH)
-.container-$(ARCH): bin/$(ARCH)/$(BIN) Dockerfile
-	@echo "container: $(IMAGE):$(VERSION)"
-	@docker build -t $(IMAGE):$(VERSION) --build-arg ARCH=$(ARCH) .
-	@echo $(IMAGE):$(VERSION) > $@
+DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 
-push: .push-$(ARCH)
-.push-$(ARCH): .container-$(ARCH)
-	@echo "push: $(IMAGE):$(VERSION)"
+container: .container-$(DOTFILE_IMAGE) container-name
+.container-$(DOTFILE_IMAGE): bin/$(ARCH)/$(BIN) Dockerfile
+	@docker build -t $(IMAGE):$(VERSION) --build-arg ARCH=$(ARCH) .
+	@docker images -q $(IMAGE):$(VERSION) > $@
+
+container-name:
+	@echo "container: $(IMAGE):$(VERSION)"
+
+push: .push-$(DOTFILE_IMAGE) push-name
+.push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
 	@gcloud docker push $(IMAGE):$(VERSION)
-	@echo $(IMAGE):$(VERSION) > $@
+	@docker images -q $(IMAGE):$(VERSION) > $@
+
+push-name:
+	@echo "pushed: $(IMAGE):$(VERSION)"
 
 version:
 	@echo $(VERSION)
