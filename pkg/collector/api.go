@@ -69,6 +69,7 @@ func (lw logWriter) Write(b []byte) (int, error) {
 
 func (s *APIServer) newHandler() http.Handler {
 	m := httprouter.New()
+	m.Handle("GET", "/", s.healthHandler())
 	m.Handle("POST", CollectorEndpoint, s.storeRecordHandler())
 	m.Handle("GET", HealthEndpoint, s.healthHandler())
 	m.Handle("GET", VersionEndpoint, s.versionHandler())
