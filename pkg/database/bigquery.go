@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/prometheus/common/log"
 	"github.com/thockin/logr"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -90,6 +89,7 @@ func newBigqueryDatabase(log logr.Logger, project, dataset, table string) (Datab
 		return nil, fmt.Errorf("failed to create Bigquery client: %v", err)
 	}
 	return bqDatabase{
+		log:     log,
 		bq:      bq,
 		project: project,
 		dataset: dataset,
@@ -98,6 +98,7 @@ func newBigqueryDatabase(log logr.Logger, project, dataset, table string) (Datab
 }
 
 type bqDatabase struct {
+	log     logr.Logger
 	bq      *bigquery.Service
 	project string
 	dataset string
@@ -116,10 +117,10 @@ func (bqdb bqDatabase) Store(rec report.Record) error {
 	call := tds.InsertAll(bqdb.project, bqdb.dataset, bqdb.table, req)
 	resp, err := call.Do()
 	if err != nil {
-		log.Errorf("TIM: err %v", err)
-	} else {
-		spew.Dump(resp)
+		return err
 	}
+	bqdb.log.V(9).Infof("bigquery response: %s", spew.Sprintf("%#v", resp))
+
 	return nil
 }
 
