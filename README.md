@@ -26,6 +26,17 @@ This project encompasses two things:
 
 ## What is in a report?
 
+Reports include a user-provided cluster identifier (we recommend a random
+UUID), the version strings of your kubernetes master, and some information
+about each node in the cluster, including OS version, kubelet version, docker
+version, and CPU and memory capacity.
+
+To repeat from above: THIS DOES NOT REPORT ANY PERSONAL INFORMATION.  Anything
+that might be identifying, including things like IP addresses, container
+images, and object names are anonymized.  We take this very seriously.  If you
+think something we are collecting might be considered personal information,
+PLEASE let us know!
+
 An example of a report payload:
 
 ```json
