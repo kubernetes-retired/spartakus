@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: spartakus-collector
+  labels:
+    app: spartakus-collector
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: spartakus-k8s-io
+spec:
+  tls:
+    - secretName: ssl
+  backend:
+    # By default, all URLs end up here.
+    serviceName: spartakus-collector
+    servicePort: http
