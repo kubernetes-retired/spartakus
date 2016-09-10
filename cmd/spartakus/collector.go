@@ -19,6 +19,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/pflag"
 	"github.com/thockin/logr"
@@ -56,6 +58,8 @@ func (_ collectorSubProgram) Main(log logr.Logger) error {
 		os.Exit(0)
 	}
 
+	go handleSignals()
+
 	db, err := database.NewDatabase(log, collectorConfig.database)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %v", err)
@@ -71,4 +75,14 @@ func (_ collectorSubProgram) Main(log logr.Logger) error {
 		return err
 	}
 	return nil
+}
+
+func handleSignals() {
+	c := make(chan os.Signal, 1)
+	// Trap and ignore SIGTERM.
+	signal.Notify(c, syscall.SIGTERM)
+	for {
+		s := <-c
+		fmt.Printf("Got signal: %v\n", s)
+	}
 }
