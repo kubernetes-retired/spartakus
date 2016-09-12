@@ -104,7 +104,7 @@ An example of a report payload:
 }
 ```
 
-### Future work
+### Future
 
 We'd like to add more information to reports, but we're starting small.
 Anything we add will follow the same strict privacy rules outlined above.  Some
@@ -114,7 +114,13 @@ examples of things we would consider adding:
      per-Namespace
    * Average lifetime of Namespaces, Pods, Services, etc.
 
-# How do I run it?
+## What will we do with this information?
+
+This information, in aggregate, will help the Kubernetes development teams
+prioritize our efforts.  The better we understand what people are doing, the
+better we can focus on the important issues.
+
+## How do I run it?
 
 The simplest way is to use `kubectl run`.
 
