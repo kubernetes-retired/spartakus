@@ -28,13 +28,13 @@ spec:
           image: gcr.io/google_containers/spartakus-amd64:v1.0.0
           args:
             - collector
-            - --port=80
+            - --port=8080
             - --database=bigquery://project.dataset.table
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /secrets/bigquery/bigquery.json
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               protocol: TCP
           resources:
             limits:
@@ -43,7 +43,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 80
+              port: 8080
             initialDelaySeconds: 3
             timeoutSeconds: 2
             failureThreshold: 2

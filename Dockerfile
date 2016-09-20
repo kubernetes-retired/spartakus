@@ -18,8 +18,9 @@ MAINTAINER Tim Hockin <thockin@google.com>
 
 ARG ARCH
 
-ADD bin/${ARCH}/spartakus /spartakus
-
 RUN apk update --no-cache && apk add ca-certificates
 
+ADD bin/${ARCH}/spartakus /spartakus
+
+USER nobody:nobody
 ENTRYPOINT ["/spartakus"]
