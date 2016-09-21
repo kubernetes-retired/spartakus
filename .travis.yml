@@ -1,0 +1,13 @@
+language: go
+go:
+  - 1.7
+
+go_import_path: github.com/kubernetes-incubator/spartakus
+
+sudo: required
+
+services:
+  - docker
+
+script:
+  - make all test

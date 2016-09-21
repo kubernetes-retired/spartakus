@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: spartakus-collector
+  labels:
+    app: spartakus-collector
+spec:
+  replicas: 2
+  # selector defaults from template labels
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: spartakus-collector
+    spec:
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: bigquery
+          secret:
+            secretName: bigquery
+            # Map all keys to files.
+      containers:
+        - name: spartakus-collector
+          image: gcr.io/google_containers/spartakus-amd64:v1.0.0
+          args:
+            - collector
+            - --port=8080
+            - --database=bigquery://project.dataset.table
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secrets/bigquery/bigquery.json
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 2
+          volumeMounts:
+            - name: bigquery
+              mountPath: /secrets/bigquery
+              readOnly: true
