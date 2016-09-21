@@ -20,10 +20,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/report"
 	"github.com/kylelemons/godebug/pretty"
 	kresource "k8s.io/client-go/1.4/pkg/api/resource"
 	kv1 "k8s.io/client-go/1.4/pkg/api/v1"
-	"k8s.io/spartakus/pkg/report"
 )
 
 func TestNodeFromKubeNode(t *testing.T) {

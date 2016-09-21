@@ -13,12 +13,12 @@ This repo has a `Makefile` which does all the heavy lifting.
 $ make clean all test
 building: bin/amd64/spartakus
 Running tests:
-?       k8s.io/spartakus/cmd/spartakus	[no test files]
-ok      k8s.io/spartakus/pkg/collector	0.033s
-?       k8s.io/spartakus/pkg/database	[no test files]
-?       k8s.io/spartakus/pkg/report	[no test files]
-?       k8s.io/spartakus/pkg/version	[no test files]
-ok      k8s.io/spartakus/pkg/volunteer	0.152s
+?       github.com/kubernetes-incubator/spartakus/cmd/spartakus	[no test files]
+ok      github.com/kubernetes-incubator/spartakus/pkg/collector	0.033s
+?       github.com/kubernetes-incubator/spartakus/pkg/database	[no test files]
+?       github.com/kubernetes-incubator/spartakus/pkg/report	[no test files]
+?       github.com/kubernetes-incubator/spartakus/pkg/version	[no test files]
+ok      github.com/kubernetes-incubator/spartakus/pkg/volunteer	0.152s
 
 Checking gofmt: PASS
 

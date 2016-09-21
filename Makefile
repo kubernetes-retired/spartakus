@@ -15,7 +15,7 @@
 .PHONY: all push container clean
 
 BIN = spartakus
-PKG = k8s.io/spartakus
+PKG = github.com/kubernetes-incubator/spartakus
 
 REGISTRY ?= gcr.io/google_containers
 IMAGE = $(REGISTRY)/$(BIN)-$(ARCH)

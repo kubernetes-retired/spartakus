@@ -22,10 +22,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/collector"
+	"github.com/kubernetes-incubator/spartakus/pkg/database"
 	"github.com/spf13/pflag"
 	"github.com/thockin/logr"
-	"k8s.io/spartakus/pkg/collector"
-	"k8s.io/spartakus/pkg/database"
 )
 
 var collectorConfig = struct {

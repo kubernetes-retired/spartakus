@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/report"
 	"github.com/thockin/logr"
-	"k8s.io/spartakus/pkg/report"
 )
 
 func init() {

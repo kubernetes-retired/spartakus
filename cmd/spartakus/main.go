@@ -22,10 +22,10 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/version"
 	"github.com/spf13/pflag"
 	"github.com/thockin/glogr"
 	"github.com/thockin/logr"
-	"k8s.io/spartakus/pkg/version"
 )
 
 func usage() {

@@ -21,10 +21,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/database"
+	"github.com/kubernetes-incubator/spartakus/pkg/volunteer"
 	"github.com/spf13/pflag"
 	"github.com/thockin/logr"
-	"k8s.io/spartakus/pkg/database"
-	"k8s.io/spartakus/pkg/volunteer"
 )
 
 var volunteerConfig = struct {

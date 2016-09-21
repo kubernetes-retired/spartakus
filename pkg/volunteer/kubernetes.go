@@ -21,11 +21,11 @@ import (
 	"encoding/hex"
 	"sort"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/report"
 	kclient "k8s.io/client-go/1.4/kubernetes"
 	kapi "k8s.io/client-go/1.4/pkg/api"
 	kv1 "k8s.io/client-go/1.4/pkg/api/v1"
 	krest "k8s.io/client-go/1.4/rest"
-	"k8s.io/spartakus/pkg/report"
 )
 
 type nodeLister interface {

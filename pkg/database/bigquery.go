@@ -22,12 +22,12 @@ import (
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/kubernetes-incubator/spartakus/pkg/report"
 	"github.com/thockin/logr"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	bigquery "google.golang.org/api/bigquery/v2"
-	"k8s.io/spartakus/pkg/report"
 )
 
 func init() {

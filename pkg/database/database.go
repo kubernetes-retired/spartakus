@@ -19,8 +19,8 @@ package database
 import (
 	"fmt"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/report"
 	"github.com/thockin/logr"
-	"k8s.io/spartakus/pkg/report"
 )
 
 type Database interface {

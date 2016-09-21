@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/database"
+	"github.com/kubernetes-incubator/spartakus/pkg/report"
+	"github.com/kubernetes-incubator/spartakus/pkg/version"
 	"github.com/thockin/logr"
-	"k8s.io/spartakus/pkg/database"
-	"k8s.io/spartakus/pkg/report"
-	"k8s.io/spartakus/pkg/version"
 )
 
 func New(log logr.Logger, clusterID string, period time.Duration, db database.Database) (*volunteer, error) {

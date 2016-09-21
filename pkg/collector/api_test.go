@@ -25,9 +25,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/database"
+	"github.com/kubernetes-incubator/spartakus/pkg/report"
 	logrtest "github.com/thockin/logr/testing"
-	"k8s.io/spartakus/pkg/database"
-	"k8s.io/spartakus/pkg/report"
 )
 
 var (

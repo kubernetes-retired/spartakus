@@ -22,10 +22,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kubernetes-incubator/spartakus/pkg/database"
+	"github.com/kubernetes-incubator/spartakus/pkg/report"
+	"github.com/kubernetes-incubator/spartakus/pkg/version"
 	logrtest "github.com/thockin/logr/testing"
-	"k8s.io/spartakus/pkg/database"
-	"k8s.io/spartakus/pkg/report"
-	"k8s.io/spartakus/pkg/version"
 )
 
 // Fake out "list nodes" calls.
