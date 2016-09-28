@@ -128,7 +128,7 @@ The simplest way is to use `kubectl run`.
 kubectl run spartakus \
     --image=gcr.io/google_containers/spartakus-amd64:v1.0.0 \
     -- \
-    volunteer --cluster-id=$(uuidgen -r)
+    volunteer --cluster-id=$(uuidgen)
 ```
 
 This will generate a `Deployment` called "spartakus" in your "default"
