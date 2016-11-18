@@ -143,6 +143,13 @@ If you want to save the YAML that this produces, you can simply run:
 kubectl get deployment spartakus -o yaml
 ```
 
+Also, you shouldn't worry about CPU and mem usage of this pod, as it is very
+lightweight. You can edit the deployment to request only a small amount of CPU
+and memory and make sure this won't consume more. For example, this will work
+totally fine with `1m` CPU and `10Mi` mem on a 5 nodes cluster.
+
+So, don't be afraid about its CPU/mem usage :)
+
 ## Development
 
 Simply run `make` or `make test`.  The build is done through Docker.
