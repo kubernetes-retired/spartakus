@@ -32,6 +32,7 @@ var volunteerConfig = struct {
 	period         time.Duration
 	database       string
 	printDatabases bool
+	extensionsPath string
 }{}
 
 type volunteerSubProgram struct{}
@@ -42,6 +43,7 @@ func (_ volunteerSubProgram) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&volunteerConfig.database, "database",
 		"https://spartakus.k8s.io", "Send reports to this database; use --print-databases for a list of options")
 	fs.BoolVar(&volunteerConfig.printDatabases, "print-databases", false, "Print database options and exit")
+	fs.StringVar(&volunteerConfig.extensionsPath, "extensions", "", "Path to a file of additional metrics to report; leave unset to report no additional metrics")
 }
 
 func (_ volunteerSubProgram) Validate() error {
@@ -65,7 +67,7 @@ func (_ volunteerSubProgram) Main(log logr.Logger) error {
 		return fmt.Errorf("failed to initialize database: %v", err)
 	}
 
-	volunteer, err := volunteer.New(log, volunteerConfig.clusterID, volunteerConfig.period, db)
+	volunteer, err := volunteer.New(log, volunteerConfig.clusterID, volunteerConfig.period, db, volunteerConfig.extensionsPath)
 	if err != nil {
 		return fmt.Errorf("failed initializing volunteer: %v", err)
 	}

@@ -17,7 +17,9 @@ limitations under the License.
 package volunteer
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"time"
 
@@ -27,12 +29,13 @@ import (
 	"github.com/thockin/logr"
 )
 
-func New(log logr.Logger, clusterID string, period time.Duration, db database.Database) (*volunteer, error) {
+func New(log logr.Logger, clusterID string, period time.Duration, db database.Database, extensionsPath string) (*volunteer, error) {
 	kcw, err := newKubeClientWrapper()
 	if err != nil {
 		return nil, err
 	}
-	return newVolunteer(log, clusterID, period, db, kcw, kcw), nil
+	fel := fileExtensionsLister(extensionsPath)
+	return newVolunteer(log, clusterID, period, db, kcw, kcw, fel), nil
 }
 
 func newVolunteer(
@@ -41,25 +44,28 @@ func newVolunteer(
 	period time.Duration,
 	db database.Database,
 	nodeLister nodeLister,
-	serverVersioner serverVersioner) *volunteer {
+	serverVersioner serverVersioner,
+	extensionsLister extensionsLister) *volunteer {
 
 	return &volunteer{
-		log:             log,
-		clusterID:       clusterID,
-		period:          period,
-		database:        db,
-		nodeLister:      nodeLister,
-		serverVersioner: serverVersioner,
+		log:              log,
+		clusterID:        clusterID,
+		period:           period,
+		database:         db,
+		nodeLister:       nodeLister,
+		serverVersioner:  serverVersioner,
+		extensionsLister: extensionsLister,
 	}
 }
 
 type volunteer struct {
-	clusterID       string
-	period          time.Duration
-	database        database.Database
-	log             logr.Logger
-	nodeLister      nodeLister
-	serverVersioner serverVersioner
+	clusterID        string
+	period           time.Duration
+	database         database.Database
+	log              logr.Logger
+	nodeLister       nodeLister
+	serverVersioner  serverVersioner
+	extensionsLister extensionsLister
 }
 
 func (v *volunteer) Run() error {
@@ -103,12 +109,19 @@ func (v *volunteer) generateRecord() (report.Record, error) {
 		return report.Record{}, err
 	}
 
+	extensions, err := v.extensionsLister.ListExtensions()
+	if err != nil {
+		v.log.Errorf("failed to list extensions: %v", err)
+		extensions = []report.Extension{}
+	}
+
 	rec := report.Record{
 		Version:       version.VERSION,
 		Timestamp:     strconv.FormatInt(time.Now().Unix(), 10),
 		ClusterID:     v.clusterID,
 		MasterVersion: &svrVer,
 		Nodes:         nodes,
+		Extensions:    extensions,
 	}
 
 	return rec, nil
@@ -116,4 +129,62 @@ func (v *volunteer) generateRecord() (report.Record, error) {
 
 func (v *volunteer) send(rec report.Record) error {
 	return v.database.Store(rec)
+}
+
+type extensionsLister interface {
+	// ListExtensions returns a slice of report.Extensions, since that is the
+	// schema of the extensions in the database. Returning the array is nicer
+	// than returning a map since it means we don't have to encode any logic
+	// about transforming a map of extensions into an array of extensions in
+	// other parts of the the package. The format of the extensions file
+	// different from the database schema to be less verbose: writing
+	// {"k1": "v1", "k2": "v2"} is easier than [{"name": "k1", "value": "v1"}...
+	ListExtensions() ([]report.Extension, error)
+}
+
+// fileExtensionsLister is a basic implementation of the extensionsLister
+// that reads extensions from a file.
+type fileExtensionsLister string
+
+// ListExtensions returns a slice of report.Extensions containing the
+// custom extensions that the user may want to report.
+func (f fileExtensionsLister) ListExtensions() ([]report.Extension, error) {
+	var extensions []report.Extension
+
+	if f == "" {
+		return extensions, nil
+	}
+
+	extensionsBytes, err := ioutil.ReadFile(string(f))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read extensions file: %v", err)
+	}
+
+	return byteExtensionsLister(extensionsBytes).ListExtensions()
+}
+
+// byteExtensionsLister is a basic implementation of the extensionsLister
+// that reads extensions from a byte array.
+type byteExtensionsLister []byte
+
+// ListExtensions returns a slice of report.Extensions containing the
+// custom extensions that the user may want to report.
+func (b byteExtensionsLister) ListExtensions() ([]report.Extension, error) {
+	var extensions []report.Extension
+
+	if len(b) == 0 {
+		return extensions, nil
+	}
+
+	extensionsMap := make(map[string]string)
+	err := json.Unmarshal(b, &extensionsMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse extensions data: %v", err)
+	}
+
+	for k, v := range extensionsMap {
+		extensions = append(extensions, report.Extension{Name: k, Value: v})
+	}
+
+	return extensions, nil
 }

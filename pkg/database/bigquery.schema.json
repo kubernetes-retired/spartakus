@@ -82,5 +82,22 @@
     "mode": "REPEATED",
     "name": "nodes",
     "type": "RECORD"
+  },
+  {
+    "fields": [
+      {
+        "mode": "REQUIRED",
+        "name": "name",
+        "type": "STRING"
+      },
+      {
+        "mode": "REQUIRED",
+        "name": "value",
+        "type": "STRING"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "extensions",
+    "type": "RECORD"
   }
 ]
