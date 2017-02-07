@@ -150,6 +150,47 @@ totally fine with `1m` CPU and `10Mi` mem on a 5 nodes cluster.
 
 So, don't be afraid about its CPU/mem usage :)
 
+## Extensions
+
+Reports can be voluntarily extended to include additional information by
+running the volunteer with the `--extensions` flag.  This flag should be set to
+the path of a file of arbitrary JSON key-value pairs you would like to report,
+e.g.:
+
+```
+spartakus volunteer --cluster-id=$(uuidgen) --extensions=/path/to/my/extensions.json
+```
+
+Where `extensions.json` could be:
+
+```json
+{
+  "hello": "world",
+  "foo": "bar"
+}
+```
+
+With this configuration, the volunteer will generate a report that looks like:
+
+```json
+{
+    "version": "v1.0.0",
+    "timestamp": "867530909031976",
+    "clusterID": "2f9c93d3-156c-47aa-8802-578ffca9b50e",
+    "masterVersion": "v1.3.5",
+    "extensions": [
+      {
+        "name": "hello",
+        "value": "world"
+      },
+      {
+        "name": "foo",
+        "value": "bar"
+      }
+    ]
+}
+```
+
 ## Development
 
 Simply run `make` or `make test`.  The build is done through Docker.
