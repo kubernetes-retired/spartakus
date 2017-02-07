@@ -32,12 +32,20 @@ func TestNodeFromKubeNode(t *testing.T) {
 		expect report.Node
 	}{
 		{
+			input: kv1.Node{},
+			expect: report.Node{
+				CloudProvider: strPtr("unknown"),
+			},
+		},
+		{
 			input: kv1.Node{
 				ObjectMeta: kv1.ObjectMeta{
 					Name: "kname",
 				},
 			},
-			expect: report.Node{},
+			expect: report.Node{
+				CloudProvider: strPtr("unknown"),
+			},
 		},
 		{
 			input: kv1.Node{
@@ -59,6 +67,7 @@ func TestNodeFromKubeNode(t *testing.T) {
 					{Resource: "r2", Value: "200"},
 					{Resource: "r3", Value: "300"},
 				},
+				CloudProvider: strPtr("unknown"),
 			},
 		},
 		{
@@ -84,6 +93,27 @@ func TestNodeFromKubeNode(t *testing.T) {
 				Architecture:            strPtr("architecture"),
 				ContainerRuntimeVersion: strPtr("runtime"),
 				KubeletVersion:          strPtr("kubelet"),
+				CloudProvider:           strPtr("unknown"),
+			},
+		},
+		{
+			input: kv1.Node{
+				Spec: kv1.NodeSpec{
+					ProviderID: "foo://bar",
+				},
+			},
+			expect: report.Node{
+				CloudProvider: strPtr("unknown"),
+			},
+		},
+		{
+			input: kv1.Node{
+				Spec: kv1.NodeSpec{
+					ProviderID: "aws://foo",
+				},
+			},
+			expect: report.Node{
+				CloudProvider: strPtr("aws"),
 			},
 		},
 	}
