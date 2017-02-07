@@ -1,0 +1,86 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "version",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "timestamp",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "clusterID",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "masterVersion",
+    "type": "STRING"
+  },
+  {
+    "fields": [
+      {
+        "mode": "REQUIRED",
+        "name": "id",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "operatingSystem",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "osImage",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "kernelVersion",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "architecture",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "containerRuntimeVersion",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "kubeletVersion",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "cloudProvider",
+        "type": "STRING"
+      },
+      {
+        "fields": [
+          {
+            "mode": "REQUIRED",
+            "name": "resource",
+            "type": "STRING"
+          },
+          {
+            "mode": "REQUIRED",
+            "name": "value",
+            "type": "STRING"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "capacity",
+        "type": "RECORD"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "nodes",
+    "type": "RECORD"
+  }
+]
