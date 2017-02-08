@@ -54,6 +54,7 @@ An example of a report payload:
             "architecture": "amd64",
             "containerRuntimeVersion": "docker://1.11.2",
             "kubeletVersion": "v1.3.2",
+            "cloudProvider": "aws",
             "capacity": [
                 {
                     "resource": "alpha.kubernetes.io/nvidia-gpu",
@@ -81,6 +82,7 @@ An example of a report payload:
             "architecture": "amd64",
             "containerRuntimeVersion": "docker://1.11.2",
             "kubeletVersion": "v1.3.2",
+            "cloudProvider": "aws",
             "capacity": [
                 {
                     "resource": "alpha.kubernetes.io/nvidia-gpu",

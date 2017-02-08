@@ -148,6 +148,7 @@ func makeNode(node report.Node) map[string]bigquery.JsonValue {
 		"architecture":            node.Architecture,
 		"containerRuntimeVersion": node.ContainerRuntimeVersion,
 		"kubeletVersion":          node.KubeletVersion,
+		"cloudProvider":           node.CloudProvider,
 	}
 	capacity := []map[string]bigquery.JsonValue{}
 	for _, c := range node.Capacity {
