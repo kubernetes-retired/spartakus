@@ -23,10 +23,10 @@ import (
 	"strings"
 
 	"github.com/kubernetes-incubator/spartakus/pkg/report"
-	kclient "k8s.io/client-go/1.4/kubernetes"
-	kapi "k8s.io/client-go/1.4/pkg/api"
-	kv1 "k8s.io/client-go/1.4/pkg/api/v1"
-	krest "k8s.io/client-go/1.4/rest"
+	kclient "k8s.io/client-go/1.5/kubernetes"
+	kapi "k8s.io/client-go/1.5/pkg/api"
+	kv1 "k8s.io/client-go/1.5/pkg/api/v1"
+	krest "k8s.io/client-go/1.5/rest"
 )
 
 // cloudProviders is a whitelist of the known Kubernetes cloud providers.
@@ -113,7 +113,7 @@ func strPtr(str string) *string {
 
 // providerName extracts the cloud provider name from a given
 // string that should match: <ProviderName>://<ProviderSpecficNodeID>
-// (see https://github.com/kubernetes/client-go/blob/v1.4.0/1.4/pkg/api/v1/types.go#L2446).
+// (see https://github.com/kubernetes/client-go/blob/v1.5.1/1.5/pkg/api/v1/types.go#L2446).
 // If the given string does not match this format, we return "unknown".
 func providerName(providerID string) string {
 	parts := strings.Split(providerID, "://")
