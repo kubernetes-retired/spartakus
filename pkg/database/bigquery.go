@@ -136,6 +136,11 @@ func makeRow(rec report.Record) map[string]bigquery.JsonValue {
 		nodes = append(nodes, makeNode(n))
 	}
 	row["nodes"] = nodes
+	extensions := []map[string]bigquery.JsonValue{}
+	for _, e := range rec.Extensions {
+		extensions = append(extensions, makeExtension(e))
+	}
+	row["extensions"] = extensions
 	return row
 }
 
@@ -164,4 +169,12 @@ func makeResource(res report.Resource) map[string]bigquery.JsonValue {
 		"value":    res.Value,
 	}
 	return r
+}
+
+func makeExtension(ext report.Extension) map[string]bigquery.JsonValue {
+	e := map[string]bigquery.JsonValue{
+		"name":  ext.Name,
+		"value": ext.Value,
+	}
+	return e
 }

@@ -32,6 +32,8 @@ type Record struct {
 	MasterVersion *string `json:"masterVersion,omitempty"`
 	// Nodes is a list of node-specific information from the reporting cluster.
 	Nodes []Node `json:"nodes,omitempty"`
+	// Extensions is a list of key-value pairs of custom values.
+	Extensions []Extension `json:"extensions,omitempty"`
 }
 
 type Node struct {
@@ -66,5 +68,12 @@ type Resource struct {
 	// Resource is the name of the resource.
 	Resource string `json:"resource"` // required
 	// Value is the string form of the of the resource's value.
+	Value string `json:"value"` // required
+}
+
+type Extension struct {
+	// Name is the name of the extension.
+	Name string `json:"name"` // required
+	// Value is the string form of the of the extension's value.
 	Value string `json:"value"` // required
 }

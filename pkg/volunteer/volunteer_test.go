@@ -40,6 +40,18 @@ func (fake fakeNodeLister) ListNodes() ([]report.Node, error) {
 	return fake.returnValue, fake.returnError
 }
 
+// Fake out "list extension" calls.
+type fakeExtensionLister struct {
+	returnValue []report.Extension
+	returnError error
+}
+
+var _ extensionsLister = fakeExtensionLister{}
+
+func (fake fakeExtensionLister) ListExtensions() ([]report.Extension, error) {
+	return fake.returnValue, fake.returnError
+}
+
 // Fake out "get server version" calls.
 type fakeServerVersioner struct {
 	returnValue string
@@ -60,15 +72,17 @@ func newTestVolunteer(t *testing.T) *volunteer {
 	db := database.Database(nil)
 	nodes := &fakeNodeLister{}
 	vers := &fakeServerVersioner{}
-	return newVolunteer(log, fakeClusterID, fakePeriod, db, nodes, vers)
+	exts := &fakeExtensionLister{}
+	return newVolunteer(log, fakeClusterID, fakePeriod, db, nodes, vers, exts)
 }
 
 func TestGenerateRecord(t *testing.T) {
 	testCases := []struct {
-		tweak   func(vol *volunteer)
-		errstr  string
-		version string
-		nodes   []string
+		tweak      func(vol *volunteer)
+		errstr     string
+		version    string
+		nodes      []string
+		extensions []string
 	}{
 		{ // test serverVersioner failure
 			tweak: func(vol *volunteer) {
@@ -82,15 +96,25 @@ func TestGenerateRecord(t *testing.T) {
 			},
 			errstr: "fail",
 		},
+		{ // test extensionLister failure, should not cause total failure
+			tweak: func(vol *volunteer) {
+				vol.extensionsLister.(*fakeExtensionLister).returnError = fmt.Errorf("fail")
+			},
+		},
 		{ // test success
 			tweak: func(vol *volunteer) {
 				vol.serverVersioner.(*fakeServerVersioner).returnValue = "v1.2.3"
 				vol.nodeLister.(*fakeNodeLister).returnValue = []report.Node{
 					{ID: "node1"}, {ID: "node2"},
 				}
+				vol.extensionsLister.(*fakeExtensionLister).returnValue = []report.Extension{
+					{Name: "foo", Value: "bar"},
+					{Name: "foo", Value: "baz"},
+				}
 			},
-			version: "v1.2.3",
-			nodes:   []string{"node1", "node2"},
+			version:    "v1.2.3",
+			nodes:      []string{"node1", "node2"},
+			extensions: []string{"bar", "baz"},
 		},
 	}
 
@@ -119,9 +143,112 @@ func TestGenerateRecord(t *testing.T) {
 			if len(rec.Nodes) != len(tc.nodes) {
 				t.Errorf("[%d] expected %d nodes, got %d", i, len(rec.Nodes), len(tc.nodes))
 			}
+			if len(rec.Extensions) != len(tc.extensions) {
+				t.Errorf("[%d] expected %d extensions, got %d", i, len(rec.Extensions), len(tc.extensions))
+			}
 			for j := range rec.Nodes {
 				if rec.Nodes[j].ID != tc.nodes[j] {
 					t.Errorf("[%d] expected node[%d].ID %q, got %q", i, j, rec.Nodes[j].ID, tc.nodes[j])
+				}
+			}
+			for j := range rec.Extensions {
+				if rec.Extensions[j].Value != tc.extensions[j] {
+					t.Errorf("[%d] expected extension[%d].Value %q, got %q", i, j, rec.Extensions[j].Value, tc.extensions[j])
+				}
+			}
+		}
+	}
+}
+
+func TestExtensionsLister(t *testing.T) {
+	testCases := []struct {
+		lister     extensionsLister
+		length     int
+		err        bool
+		extensions []report.Extension
+	}{
+		{
+			lister: pathExtensionsLister(""),
+			length: 0,
+			err:    false,
+		},
+		{
+			lister: pathExtensionsLister("/path/to/extensions/does/not/exist"),
+			length: 0,
+			err:    true,
+		},
+		{
+			lister: byteExtensionsLister([]byte{}),
+			length: 0,
+			err:    false,
+		},
+		{
+			lister: byteExtensionsLister([]byte("fake extensions data")),
+			length: 0,
+			err:    true,
+		},
+		{
+			lister: byteExtensionsLister([]byte{}),
+			length: 0,
+			err:    false,
+		},
+		{
+			lister: byteExtensionsLister([]byte(`{"foo":"bar"}`)),
+			length: 1,
+			err:    false,
+			extensions: []report.Extension{
+				{
+					Name:  "foo",
+					Value: "bar",
+				},
+			},
+		},
+		{
+			lister: byteExtensionsLister([]byte(`{"foo":"bar", "baz":"qux"}`)),
+			length: 2,
+			err:    false,
+			extensions: []report.Extension{
+				{
+					Name:  "foo",
+					Value: "bar",
+				},
+				{
+					Name:  "baz",
+					Value: "qux",
+				},
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		l := tc.lister
+		extensions, err := l.ListExtensions()
+
+		if tc.err {
+			if err == nil {
+				t.Errorf("[%d] expected error, got %v", i, err)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("[%d] unexpected error %q", i, err)
+			}
+		}
+
+		if len(extensions) != tc.length {
+			t.Errorf("[%d] expected %d extensions, got %d", i, tc.length, len(extensions))
+		}
+
+		if tc.extensions != nil {
+			for _, tce := range tc.extensions {
+				var extensionsContaintsTestExtension bool
+				for _, e := range extensions {
+					if e == tce {
+						extensionsContaintsTestExtension = true
+						break
+					}
+				}
+				if !extensionsContaintsTestExtension {
+					t.Errorf("[%d] expected extensions to contain %v", i, tce)
 				}
 			}
 		}
