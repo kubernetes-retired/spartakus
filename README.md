@@ -152,10 +152,15 @@ So, don't be afraid about its CPU/mem usage :)
 
 ## Extensions
 
-Reports can be voluntarily extended to include additional information by
-running the volunteer with the `--extensions` flag.  This flag should be set to
-the path of a file of arbitrary JSON key-value pairs you would like to report,
-e.g.:
+Reports can be voluntarily extended to include additional information called
+*extensions*. Extensions are key-value pairs. Valid keys have two segments: an
+optional prefix and a name, separated by a slash (`/`). The name segment is
+required and the prefix is optional. If specified, the prefix must be a DNS
+subdomain: a series of DNS labels separated by dots (`.`), e.g. "example.com".
+
+In order to submit extensions, run the volunteer with the `--extensions` flag.
+This flag should be set to the path of a file of arbitrary JSON key-value pairs
+you would like to report, e.g.:
 
 ```
 spartakus volunteer --cluster-id=$(uuidgen) --extensions=/path/to/my/extensions.json
@@ -165,8 +170,8 @@ Where `extensions.json` could be:
 
 ```json
 {
-  "hello": "world",
-  "foo": "bar"
+  "example.com/hello": "world",
+  "example.com/foo": "bar"
 }
 ```
 
@@ -180,16 +185,20 @@ With this configuration, the volunteer will generate a report that looks like:
     "masterVersion": "v1.3.5",
     "extensions": [
       {
-        "name": "hello",
+        "name": "example.com/hello",
         "value": "world"
       },
       {
-        "name": "foo",
+        "name": "example.com/foo",
         "value": "bar"
       }
     ]
 }
 ```
+
+The `--extensions` flag can optionally be set to the path of a directory. In
+this case, all files in the provided directory, excluding those with a leading
+`.`, will be parsed.
 
 ## Development
 
