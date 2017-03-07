@@ -168,12 +168,12 @@ func TestExtensionsLister(t *testing.T) {
 		extensions []report.Extension
 	}{
 		{
-			lister: fileExtensionsLister(""),
+			lister: pathExtensionsLister(""),
 			length: 0,
 			err:    false,
 		},
 		{
-			lister: fileExtensionsLister("/path/to/extensions/does/not/exist"),
+			lister: pathExtensionsLister("/path/to/extensions/does/not/exist"),
 			length: 0,
 			err:    true,
 		},

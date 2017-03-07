@@ -20,7 +20,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kubernetes-incubator/spartakus/pkg/database"
@@ -34,8 +37,8 @@ func New(log logr.Logger, clusterID string, period time.Duration, db database.Da
 	if err != nil {
 		return nil, err
 	}
-	fel := fileExtensionsLister(extensionsPath)
-	return newVolunteer(log, clusterID, period, db, kcw, kcw, fel), nil
+	pel := pathExtensionsLister(extensionsPath)
+	return newVolunteer(log, clusterID, period, db, kcw, kcw, pel), nil
 }
 
 func newVolunteer(
@@ -142,29 +145,58 @@ type extensionsLister interface {
 	ListExtensions() ([]report.Extension, error)
 }
 
-// fileExtensionsLister is a basic implementation of the extensionsLister
-// that reads extensions from a file.
-type fileExtensionsLister string
+// pathExtensionsLister is higher level implementation of the extensionsLister
+// interface that reads extensions from a path, be it a directory or a file.
+type pathExtensionsLister string
 
 // ListExtensions returns a slice of report.Extensions containing the
 // custom extensions that the user may want to report.
-func (f fileExtensionsLister) ListExtensions() ([]report.Extension, error) {
+func (p pathExtensionsLister) ListExtensions() ([]report.Extension, error) {
 	var extensions []report.Extension
 
-	if f == "" {
+	if p == "" {
 		return extensions, nil
 	}
 
-	extensionsBytes, err := ioutil.ReadFile(string(f))
+	f, err := os.Stat(string(p))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read extensions file: %v", err)
+		return nil, fmt.Errorf("failed to stat extensions path: %v", err)
 	}
 
-	return byteExtensionsLister(extensionsBytes).ListExtensions()
+	var paths []string
+	if f.IsDir() {
+		fis, err := ioutil.ReadDir(string(p))
+		if err != nil {
+			return nil, fmt.Errorf("failed to open extensions directory: %v", err)
+		}
+
+		for _, fi := range fis {
+			// Ignore directories and files with a leading `.`.
+			if !fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
+				paths = append(paths, filepath.Join(string(p), fi.Name()))
+			}
+		}
+	} else {
+		paths = append(paths, string(p))
+	}
+
+	for _, path := range paths {
+		extensionsBytes, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read extensions file: %v", err)
+		}
+
+		es, err := byteExtensionsLister(extensionsBytes).ListExtensions()
+		if err == nil {
+			extensions = append(extensions, es...)
+		}
+	}
+
+	return extensions, nil
 }
 
 // byteExtensionsLister is a basic implementation of the extensionsLister
-// that reads extensions from a byte array.
+// interface that reads extensions from a byte array.
 type byteExtensionsLister []byte
 
 // ListExtensions returns a slice of report.Extensions containing the
