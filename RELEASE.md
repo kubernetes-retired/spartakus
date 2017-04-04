@@ -7,7 +7,27 @@ images are tagged using `semver` identifiers, for example `v1.0.0`.
 
 This repo has a `Makefile` which does all the heavy lifting.
 
-### 1. Make sure it builds and tests pass
+### 1. Sync to master
+
+Before you start, make sure you are synced to the current HEAD of the master
+branch.  A common pattern is:
+
+```
+$ git fetch upstream
+
+$ git rebase upstream/master
+Current branch master is up to date.
+```
+
+### 2. Make sure your git repo is clean
+
+```
+$ git status
+```
+
+Make sure any new files are added, and all changes are committed.
+
+### 3. Make sure it builds and tests pass
 
 ```
 $ make clean all test
@@ -25,15 +45,7 @@ Checking gofmt: PASS
 Checking go vet: PASS
 ```
 
-### 2. Make sure your git repo is clean
-
-```
-$ git status
-```
-
-Make sure any new files are added, and all changes are committed.
-
-### 3. Tag it
+### 4. Tag it
 
 Do not force-change a tag once it has been published upstream.  Always follow
 `semver` for version numbers.
@@ -43,7 +55,7 @@ $ git tag -a v1.0.0 -m "v1.0.0"
 Updated tag 'v1.0.0' (was a813ed1)
 ```
 
-### 4. Build and push the image
+### 5. Build and push the image
 
 ```
 $ make push
@@ -77,8 +89,6 @@ v1.0.0: digest: sha256:f7f137170f1624120ac716b8b9b848c7a6deb005873fb9a68e0e229df
 pushed: gcr.io/google_containers/spartakus-amd64:v1.0.0
 ```
 
-### 5. Push the tag
+### 6. Publish the release
 
-```
-$ git push v1.0.0
-```
+https://github.com/kubernetes-incubator/spartakus/releases/new
