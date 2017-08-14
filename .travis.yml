@@ -9,5 +9,9 @@ sudo: required
 services:
   - docker
 
-script:
-  - make all test
+jobs:
+  include:
+    - stage: Build
+      script: make all
+    - stage: Test
+      script: make test
