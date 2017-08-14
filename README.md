@@ -1,4 +1,5 @@
 # Spartakus
+[![Build Status](https://travis-ci.org/kubernetes-incubator/spartakus.svg?branch=master)](https://travis-ci.org/kubernetes-incubator/spartakus)
 
 This project aims to collect information about Kubernetes clusters.  This
 information will help the Kubernetes development team to understand what people
