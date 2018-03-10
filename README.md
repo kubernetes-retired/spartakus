@@ -4,9 +4,16 @@
 
 > Project Spartakus aims at collecting usage information about Kubernetes clusters. This information will help the Kubernetes development team to understand what people are doing with it, and to make it a better product.
 
+- [What is in a report?](#what-is-in-a-report)
+- [How do I run it?](#how-do-i-run-it)
+- [What will we do with this information?](#what-will-we-do-with-this-information)
+- [User documentation](docs/)
+- [Development](#development)
+- [Future](#future)
+
 Note: **Spartakus does not report any personal identifiable information (PII)**.  Anything that might be identifying, including IP addresses, container images, and object names are anonymized. We take this very seriously. If you think something we are collecting might be considered PII, please doe let us know by raising an issue here.
 
-Running Spartakus is a voluntary effort, that is, itis not baked into Kubernetes in any way, shape, or form. In other words: it operates on an opt-in basis—if you don't want to run it, you don't have to. If you want to run your own server and collect data yourself, you can do that, too—see also the [user docs](docs/) for more info on how to customize the reports.  
+Running Spartakus is a voluntary effort, that is, it is not baked into Kubernetes in any way, shape, or form. In other words: it operates on an opt-in basis—if you don't want to run it, you don't have to. If you want to run your own server and collect data yourself, you can do that, too—see also the [user docs](docs/) for more info on how to customize the reports.  
 
 ## What is in a report?
 
