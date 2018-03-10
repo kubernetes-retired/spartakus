@@ -2,3 +2,4 @@
 /.go
 /.push-*
 /.container-*
+.DS_Store

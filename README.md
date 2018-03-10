@@ -2,44 +2,17 @@
 [![Build Status](https://travis-ci.org/kubernetes-incubator/spartakus.svg?branch=master)](https://travis-ci.org/kubernetes-incubator/spartakus)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-incubator/spartakus)](https://goreportcard.com/report/github.com/kubernetes-incubator/spartakus)
 
-This project aims to collect information about Kubernetes clusters.  This
-information will help the Kubernetes development team to understand what people
-are doing with it, and to make it a better product.
+> Project Spartakus aims at collecting usage information about Kubernetes clusters. This information will help the Kubernetes development team to understand what people are doing with it, and to make it a better product.
 
-THIS DOES NOT REPORT ANY PERSONAL INFORMATION.  Anything that might be
-identifying, including things like IP addresses, container images, and object
-names are anonymized.  We take this very seriously.  If you think something we
-are collecting might be considered personal information, PLEASE let us know!
+Note: **Spartakus does not report any personal identifiable information (PII)**.  Anything that might be identifying, including IP addresses, container images, and object names are anonymized. We take this very seriously. If you think something we are collecting might be considered PII, please doe let us know by raising an issue here.
 
-This is a 100% voluntary effort.  It is not baked into Kubernetes in any way,
-shape, or form.  If you don't want to run it, you don't have to.  If you want
-to run your own server and collect data yourself, you can do that, too.  If you
-want to report less information, the source is here and we're open to feature
-requests to better tailor the reports to what people are comfortable with.
-
-## Overview
-
-This project encompasses two things:
-
-1. collector: an HTTP API which receives reports from volunteers and stores
-   them in Google Bigquery
-2. volunteer: a tool that periodically generates reports using the Kubernetes
-   API and publishes it to the collector
+Running Spartakus is a voluntary effort, that is, itis not baked into Kubernetes in any way, shape, or form. In other words: it operates on an opt-in basis—if you don't want to run it, you don't have to. If you want to run your own server and collect data yourself, you can do that, too—see also the [user docs](docs/) for more info on how to customize the reports.  
 
 ## What is in a report?
 
-Reports include a user-provided cluster identifier (we recommend a random
-UUID), the version strings of your kubernetes master, and some information
-about each node in the cluster, including OS version, kubelet version, docker
-version, and CPU and memory capacity.
+Reports include a user-provided cluster identifier, the version strings of your Kubernetes master, and some information about each node in the cluster, including the operating system version, `kubelet` version, container runtime version, as well as CPU and memory capacity.
 
-To repeat from above: THIS DOES NOT REPORT ANY PERSONAL INFORMATION.  Anything
-that might be identifying, including things like IP addresses, container
-images, and object names are anonymized.  We take this very seriously.  If you
-think something we are collecting might be considered personal information,
-PLEASE let us know!
-
-An example of a report payload:
+An example report payload looks as follows:
 
 ```json
 {
@@ -108,102 +81,43 @@ An example of a report payload:
 }
 ```
 
-### Future
+## How do I run it?
 
-We'd like to add more information to reports, but we're starting small.
-Anything we add will follow the same strict privacy rules outlined above.  Some
-examples of things we would consider adding:
-   * How many Namespaces exist
-   * A histogram of how many Pods, Services, Deployments, etc. exist
-     per-Namespace
-   * Average lifetime of Namespaces, Pods, Services, etc.
+To start using Spartakus in your cluster, use the following:
+
+```bash
+$ kubectl run spartakus \
+    --image=gcr.io/google_containers/spartakus-amd64:v1.0.0 \
+    -- volunteer --cluster-id=$(uuidgen)
+```
+
+This will generate a deployment called `spartakus` in your `default`
+namespace and it sends a report once every 24 hours. It will report a random
+UUID as the cluster ID. Note that if you stop this deployment and re-run
+it, the UUID will be different. Managing the UUIDs is outside of the scope of Spartakus.
+
+If you want to save the YAML manifest that this produces, you can simply run:
+
+```bash
+$ kubectl get deployment spartakus -o yaml
+```
+
+You needn't worry about CPU and memory usage of Spartakus, its resource usage footprint is minimal. If you're still concerned, you can edit the deployment to request a small share of CPU and memory; for example, Spartakus will work fine with `1m` CPU and `10Mi` mem on a five-nodes cluster.
 
 ## What will we do with this information?
 
-This information, in aggregate, will help the Kubernetes development teams
-prioritize our efforts.  The better we understand what people are doing, the
-better we can focus on the important issues.
-
-## How do I run it?
-
-The simplest way is to use `kubectl run`.
-
-```
-kubectl run spartakus \
-    --image=gcr.io/google_containers/spartakus-amd64:v1.0.0 \
-    -- \
-    volunteer --cluster-id=$(uuidgen)
-```
-
-This will generate a `Deployment` called "spartakus" in your "default"
-`Namespace`, which sends a report once every 24 hours.  It will report a random
-UUID as the cluster ID.  If you ever need to stop this deployment and re-run
-it, the UUID will be different.  If you want to generate a more durable UUID by
-hand, that's fine too.
-
-If you want to save the YAML that this produces, you can simply run:
-
-```
-kubectl get deployment spartakus -o yaml
-```
-
-Also, you shouldn't worry about CPU and mem usage of this pod, as it is very
-lightweight. You can edit the deployment to request only a small amount of CPU
-and memory and make sure this won't consume more. For example, this will work
-totally fine with `1m` CPU and `10Mi` mem on a 5 nodes cluster.
-
-So, don't be afraid about its CPU/mem usage :)
-
-## Extensions
-
-Reports can be voluntarily extended to include additional information called
-*extensions*. Extensions are key-value pairs. Valid keys have two segments: an
-optional prefix and a name, separated by a slash (`/`). The name segment is
-required and the prefix is optional. If specified, the prefix must be a DNS
-subdomain: a series of DNS labels separated by dots (`.`), e.g. "example.com".
-
-In order to submit extensions, run the volunteer with the `--extensions` flag.
-This flag should be set to the path of a file of arbitrary JSON key-value pairs
-you would like to report, e.g.:
-
-```
-spartakus volunteer --cluster-id=$(uuidgen) --extensions=/path/to/my/extensions.json
-```
-
-Where `extensions.json` could be:
-
-```json
-{
-  "example.com/hello": "world",
-  "example.com/foo": "bar"
-}
-```
-
-With this configuration, the volunteer will generate a report that looks like:
-
-```json
-{
-    "version": "v1.0.0",
-    "timestamp": "867530909031976",
-    "clusterID": "2f9c93d3-156c-47aa-8802-578ffca9b50e",
-    "masterVersion": "v1.3.5",
-    "extensions": [
-      {
-        "name": "example.com/hello",
-        "value": "world"
-      },
-      {
-        "name": "example.com/foo",
-        "value": "bar"
-      }
-    ]
-}
-```
-
-The `--extensions` flag can optionally be set to the path of a directory. In
-this case, all files in the provided directory, excluding those with a leading
-`.`, will be parsed.
+The information reported by Spartakus, in aggregate, will help the Kubernetes development teams prioritize our efforts. The better we understand what people are doing, the better we can focus on the important issues.
 
 ## Development
 
-Simply run `make` or `make test`.  The build is done through Docker.
+Note that you only will need this section if you're contributing to Spartakus.
+
+To build artefacts, we're using make. Simply run `make` or `make test` to build the binary in `bin/`; the container image build is carried out through Docker and hence requires you've got Docker running on your machine.
+
+### Future
+
+Anything we add will follow the same strict privacy rules as outlined above.  Some examples of things we would consider adding:
+
+- How many namespaces exist.
+- A histogram of how many pods, services, deployments, etc. exist on a per-namespace basis.
+- Average lifetime of namespaces, pods, services, etc.
