@@ -103,7 +103,7 @@ namespace which sends a report once every 24 hours. It will report a random
 UUID as the cluster ID. Note that if you stop this deployment and re-run
 it, the UUID will be different. Managing the UUIDs is outside of the scope of Spartakus.
 
-If you want to save the YAML manifest that above run command produces, you can simply execute the following (note: the `--export` flag strips cluster-specific information):
+If you want to save the YAML manifest that the command above produces, you can simply execute the following (note: the `--export` flag strips cluster-specific information):
 
 ```bash
 $ kubectl get deployment spartakus --export -o yaml
