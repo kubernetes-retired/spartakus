@@ -11,7 +11,7 @@
 - [Development](#development)
 - [Future](#future)
 
-Note: **Spartakus does not report any personal identifiable information (PII)**.  Anything that might be identifying, including IP addresses, container images, and object names are anonymized. We take this very seriously. If you think something we are collecting might be considered PII, please doe let us know by raising an issue here.
+Note: **Spartakus does not report any personal identifiable information (PII)**.  Anything that might be identifying, including IP addresses, container images, and object names are anonymized. We take this very seriously. If you think something we are collecting might be considered PII, please do let us know by raising an issue here.
 
 Running Spartakus is a voluntary effort, that is, it is not baked into Kubernetes in any way, shape, or form. In other words: it operates on an opt-in basis—if you don't want to run it, you don't have to. If you want to run your own server and collect data yourself, you can do that, too—see also the [user docs](docs/) for more info on how to customize the reports.  
 
@@ -99,14 +99,14 @@ $ kubectl run spartakus \
 ```
 
 This will generate a deployment called `spartakus` in your `default`
-namespace and it sends a report once every 24 hours. It will report a random
+namespace which sends a report once every 24 hours. It will report a random
 UUID as the cluster ID. Note that if you stop this deployment and re-run
 it, the UUID will be different. Managing the UUIDs is outside of the scope of Spartakus.
 
-If you want to save the YAML manifest that this produces, you can simply run:
+If you want to save the YAML manifest that the command above produces, you can simply execute the following (note: the `--export` flag strips cluster-specific information):
 
 ```bash
-$ kubectl get deployment spartakus -o yaml
+$ kubectl get deployment spartakus --export -o yaml
 ```
 
 You needn't worry about CPU and memory usage of Spartakus, its resource usage footprint is minimal. If you're still concerned, you can edit the deployment to request a small share of CPU and memory; for example, Spartakus will work fine with `1m` CPU and `10Mi` mem on a five-nodes cluster.
